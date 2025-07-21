@@ -86,6 +86,116 @@ Console.WriteLine($"Next year, you will be {userAge + 1} years old.");
 ```
 **Note:** The `int.Parse()` method will throw an exception if the user enters text that cannot be converted to an integer. We'll cover robust error handling in a later topic.
 
+### File I/O
+Besides interacting with the console, a common requirement is to read from and write to files. The `System.IO` namespace provides the necessary tools for this.
+
+#### Working with Text Files (.txt)
+The `File` class is the easiest way to perform basic operations on text files.
+
+**Writing to a text file:**
+The `File.WriteAllText()` method creates a new file, writes the specified string to it, and then closes the file. If the target file already exists, it is overwritten.
+
+```csharp
+string filePath = "MyTextFile.txt";
+string content = "Hello, this is a line of text.\nThis is another line.";
+File.WriteAllText(filePath, content);
+Console.WriteLine("Successfully wrote to file.");
+```
+
+**Reading from a text file:**
+The `File.ReadAllText()` method opens a text file, reads all the text in the file into a string, and then closes the file.
+
+```csharp
+if (File.Exists(filePath))
+{
+    string readContent = File.ReadAllText(filePath);
+    Console.WriteLine("File content:");
+    Console.WriteLine(readContent);
+}
+```
+
+#### Working with JSON Files (.json)
+JSON (JavaScript Object Notation) is a standard format for data exchange. .NET has a powerful built-in library, `System.Text.Json`, for working with JSON data. This process is called **serialization** (object to JSON) and **deserialization** (JSON to object).
+
+Let's imagine we have a simple `User` class:
+```csharp
+public class User
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
+}
+```
+
+**Writing to a JSON file (Serialization):**
+```csharp
+using System.Text.Json;
+
+var user = new User
+{
+    Id = 1,
+    Name = "John Doe",
+    Email = "john.doe@example.com"
+};
+
+string jsonString = JsonSerializer.Serialize(user, new JsonSerializerOptions { WriteIndented = true });
+File.WriteAllText("user.json", jsonString);
+```
+This will create a `user.json` file with a nicely formatted representation of the `user` object.
+
+**Reading from a JSON file (Deserialization):**
+```csharp
+string jsonContent = File.ReadAllText("user.json");
+User? deserializedUser = JsonSerializer.Deserialize<User>(jsonContent);
+
+if (deserializedUser != null)
+{
+    Console.WriteLine($"User ID: {deserializedUser.Id}, Name: {deserializedUser.Name}");
+}
+```
+
+#### Working with CSV Files (.csv)
+CSV files store tabular data in plain text, with each line being a data record and each record consisting of one or more fields separated by commas. While you can manually parse these by splitting strings, it's error-prone. The recommended approach is to use a robust library from NuGet.
+
+**Using a Library (CsvHelper):**
+The most popular library for this is `CsvHelper`. To use it, you would first add it to your project:
+```bash
+dotnet add package CsvHelper
+```
+
+**Writing to a CSV file:**
+```csharp
+using CsvHelper;
+using System.Globalization;
+
+// Assume we have a list of users
+var users = new List<User>
+{
+    new User { Id = 1, Name = "John Doe", Email = "john.doe@example.com" },
+    new User { Id = 2, Name = "Jane Smith", Email = "jane.smith@example.com" }
+};
+
+using (var writer = new StreamWriter("users.csv"))
+using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+{
+    csv.WriteRecords(users);
+}
+```
+
+**Reading from a CSV file:**
+```csharp
+using (var reader = new StreamReader("users.csv"))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+{
+    var records = csv.GetRecords<User>();
+    foreach (var record in records)
+    {
+        Console.WriteLine($"Read user: {record.Name}");
+    }
+}
+```
+This approach is much more reliable than manual parsing, as it correctly handles details like commas within quoted fields.
+
 ## Recommended practices
 
 Writing clean, readable, and maintainable code is crucial for any developer. Following established conventions makes your code easier for you and others to understand. Here are some fundamental best practices for C#.

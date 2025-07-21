@@ -1,0 +1,1 @@
+This is a basic C# project structure for learning and practicing C# programming.

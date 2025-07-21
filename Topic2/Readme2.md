@@ -278,3 +278,14 @@ The basic workflow is:
         -   **Step Into (F11)**: If the current line is a method call, it moves into that method's code.
         -   **Step Out (Shift+F11)**: Finishes executing the current method and returns to the line where it was called.
 4.  **Stop Debugging**: Click the red stop button in the debug toolbar or press `Shift+F5`.
+
+### A Note on Debugging in JetBrains Rider
+JetBrains Rider, another popular IDE for .NET development, also offers a top-tier debugging experience with some powerful features. The basic principles of setting breakpoints and stepping through code are the same as in VS Code.
+
+Some useful tools in Rider include:
+- **Smart Step-Into**: When a line contains multiple method calls, Rider lets you choose which specific method to step into.
+- **Run to Cursor**: You can place your cursor on a line of code and have the debugger run until it reaches that line, without needing to set a formal breakpoint.
+- **Rich DataTips**: Rider's tooltips for inspecting variables are very powerful, allowing you to expand objects and even change their values on the fly during a debug session.
+- **Immediate Window**: A powerful REPL-like window where you can execute code and evaluate expressions in the context of the current breakpoint.
+
+We will explore debugging techniques more deeply in Topic 7.

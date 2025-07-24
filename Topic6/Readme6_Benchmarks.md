@@ -100,3 +100,196 @@ Based on the benchmark results, here are the break-even points where `HashSet<T>
 - For one-time operations with few lookups, `List<T>` is almost always better
 - For long-lived collections with frequent Contains() calls, `HashSet<T>` is superior
 - Consider the total lifetime of your collection when making the choice
+
+---
+
+## Extended Collection Performance Analysis
+
+This comprehensive benchmark compares performance across multiple collection types with different data types, providing insights for real-world scenarios.
+
+### Test Configuration
+- **Collection Sizes**: 1,000 and 10,000 elements
+- **Lookup Counts**: 100 and 1,000 lookups per test
+- **Data Types**: int, string, Guid, custom struct (ProductId), custom class (Customer)
+- **Collections Tested**: List, HashSet, SortedSet, Dictionary, SortedDictionary, ConcurrentDictionary, ImmutableList, ImmutableHashSet, Array
+
+### Performance Summary by Collection Type
+
+#### Hash-Based Collections (Best for Lookups)
+| Collection | 1K items, 100 lookups | 1K items, 1K lookups | 10K items, 100 lookups | 10K items, 1K lookups |
+|:---|---:|---:|---:|---:|
+| **HashSet<int>** | 252ns | 2.5μs | 254ns | 3.0μs |
+| **Dictionary<int,bool>** | 241ns | 2.4μs | 251ns | 3.0μs |
+| **ConcurrentDictionary<int,bool>** | 184ns | 2.0μs | 203ns | 2.1μs |
+
+#### Linear Search Collections (Worst for Lookups)
+| Collection | 1K items, 100 lookups | 1K items, 1K lookups | 10K items, 100 lookups | 10K items, 1K lookups |
+|:---|---:|---:|---:|---:|
+| **List<int>** | 5.8μs | 61μs | 48μs | 480μs |
+| **Array<int>** | 5.9μs | 60μs | 48μs | 473μs |
+| **ImmutableList<int>** | 234μs | 2.4ms | 2.8ms | 28ms |
+
+#### Tree-Based Collections (Moderate Performance)
+| Collection | 1K items, 100 lookups | 1K items, 1K lookups | 10K items, 100 lookups | 10K items, 1K lookups |
+|:---|---:|---:|---:|---:|
+| **SortedSet<int>** | 1.5μs | 38μs | 1.6μs | 68μs |
+| **SortedDictionary<int,bool>** | 1.5μs | 40μs | 2.0μs | 68μs |
+
+### Performance by Data Type
+
+#### Integer Collections (Baseline - Fastest)
+```
+HashSet<int>: ~250ns per 100 lookups (regardless of collection size)
+List<int>: 5.8μs → 480μs (scales linearly with size)
+```
+
+#### String Collections (Moderate Overhead)
+```
+HashSet<string>: ~613ns per 100 lookups (2.4x slower than int)
+List<string>: 173μs → 46ms (string comparison overhead)
+SortedSet<string>: 33μs → 551μs (string comparison + tree traversal)
+```
+
+#### Guid Collections (Efficient Structs)
+```
+HashSet<Guid>: ~277ns per 100 lookups (similar to int performance)
+List<Guid>: 52μs → 5.6ms (struct comparison overhead)
+```
+
+#### Custom Struct Collections (ProductId)
+```
+HashSet<ProductId>: ~250ns per 100 lookups (excellent performance)
+List<ProductId>: 25μs → 2.5ms (custom equality comparison)
+```
+
+#### Custom Class Collections (Customer - Reference Types)
+```
+HashSet<Customer>: ~1.1μs → 14μs (reference equality + hash computation)
+List<Customer>: 378μs → 66ms (worst performance due to reference comparison)
+```
+
+### Key Performance Insights
+
+#### 1. Hash Collections Dominate for Lookups
+- **HashSet/Dictionary**: Consistent O(1) performance regardless of collection size
+- **Performance advantage**: 100-1000x faster than linear search for large collections
+- **ConcurrentDictionary**: Surprisingly fastest, even for single-threaded scenarios
+
+#### 2. Data Type Impact Rankings (Best to Worst)
+1. **Primitive types (int)**: Fastest across all collection types
+2. **Small structs (Guid, ProductId)**: Near-primitive performance
+3. **Strings**: ~2-3x overhead due to string hashing/comparison
+4. **Custom classes**: Highest overhead due to reference equality
+
+#### 3. Collection Type Performance Tiers
+
+**Tier 1 - Excellent (Sub-microsecond)**
+- HashSet<T>
+- Dictionary<TKey, TValue>
+- ConcurrentDictionary<TKey, TValue>
+
+**Tier 2 - Good (Low microseconds)**
+- SortedSet<T> (for small collections)
+- SortedDictionary<TKey, TValue> (for small collections)
+- ImmutableHashSet<T>
+
+**Tier 3 - Poor (High microseconds to milliseconds)**
+- List<T>.Contains()
+- Array search
+- SortedSet<T> (for large collections)
+
+**Tier 4 - Terrible (Milliseconds)**
+- ImmutableList<T>.Contains()
+
+### Scalability Analysis
+
+#### Hash Collections: O(1) - Constant Time
+```
+HashSet performance remains constant:
+- 1K items: ~250ns
+- 10K items: ~250ns
+- Performance difference: <5%
+```
+
+#### Linear Collections: O(n) - Linear Growth
+```
+List performance scales linearly:
+- 1K items: 61μs (1K lookups)
+- 10K items: 480μs (1K lookups)
+- Performance degradation: 8x worse
+```
+
+#### Tree Collections: O(log n) - Logarithmic Growth
+```
+SortedSet performance scales logarithmically:
+- 1K items: 38μs (1K lookups)
+- 10K items: 68μs (1K lookups)
+- Performance degradation: 1.8x worse
+```
+
+### Memory Considerations
+
+#### Memory Efficiency Rankings
+1. **Array/List**: Most memory efficient
+2. **SortedSet/SortedDictionary**: Moderate overhead (tree structure)
+3. **HashSet/Dictionary**: Higher overhead (hash buckets)
+4. **ConcurrentDictionary**: Highest overhead (thread-safety structures)
+
+### Real-World Recommendations
+
+#### Use HashSet<T>/Dictionary<TKey,TValue> when:
+- You need frequent lookups (>10 lookups per collection lifetime)
+- Collection size > 100 items
+- Lookup performance is critical
+- You don't need ordered data
+
+#### Use List<T> when:
+- Few lookups (<10 per collection lifetime)
+- Small collections (<100 items)
+- Memory usage is critical
+- You need indexed access
+- You need ordered data
+
+#### Use SortedSet<T>/SortedDictionary<TKey,TValue> when:
+- You need both lookups AND sorted iteration
+- Moderate lookup performance is acceptable
+- Collection size is small-to-medium (<10K items)
+
+#### Avoid ImmutableList<T> for lookups:
+- 100-10,000x slower than alternatives
+- Only use when immutability is absolutely required
+- Consider ImmutableHashSet<T> as alternative
+
+#### Consider ConcurrentDictionary<TKey,TValue> when:
+- You need thread-safe operations
+- Surprisingly good performance even for single-threaded scenarios
+- Can tolerate higher memory usage
+
+### Performance Impact Examples
+
+#### Small Collection (1K items, 100 lookups)
+```csharp
+// Excellent choices (sub-microsecond)
+HashSet<int>.Contains()     // 252ns
+Dictionary<int,bool>        // 241ns
+ConcurrentDictionary        // 184ns
+
+// Poor choices (multiple microseconds)
+List<int>.Contains()        // 5.8μs (23x slower)
+SortedSet<int>.Contains()   // 1.5μs (6x slower)
+
+// Terrible choice
+ImmutableList<int>          // 234μs (1000x slower)
+```
+
+#### Large Collection (10K items, 1K lookups)
+```csharp
+// The performance gap widens dramatically:
+HashSet<int>                // 3.0μs
+List<int>                   // 480μs (160x slower!)
+ImmutableList<int>          // 28ms (9,300x slower!)
+```
+
+### Conclusion
+
+For lookup operations, **hash-based collections (HashSet, Dictionary) are almost always the right choice** unless you have very specific requirements. The performance difference becomes more dramatic as collection size and lookup frequency increase, making the choice of collection type one of the most impactful performance decisions in C# development.

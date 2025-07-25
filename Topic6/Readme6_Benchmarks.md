@@ -1,295 +1,213 @@
-# Topic 6: Collection Performance
+# C# Collection Performance Benchmarks
 
-This topic explores the performance differences between various collection types in C#.
+This document contains comprehensive performance benchmark results for various C# collection types. The benchmarks were conducted using BenchmarkDotNet with multiple scenarios testing creation time, lookup time, and total time performance.
 
-## `List<T>` vs. `HashSet<T>` for Lookups
+## Test Scenarios
 
-When you need to check if a collection contains a specific item, the choice of collection type can have a significant impact on performance, especially for large datasets.
+- **Collection Types**: Array, List, HashSet, SortedSet, Dictionary, SortedDictionary, ConcurrentDictionary, ImmutableList, ImmutableHashSet
+- **Collection Sizes (N)**: 10, 100, 1,000, 10,000 elements
+- **Lookup Counts**: 10, 100, 1,000, 10,000 lookups per test
+- **Sample Size**: 34 runs per scenario with outlier detection (Z-score > 2.0)
 
-### Benchmark Results
+## Performance Summary by Collection Size
 
-We benchmarked the `Contains` method for both `List<T>` and `HashSet<T>` with collections of varying sizes.
+### Small Collections (N=10)
 
-| Collection Type | Number of Elements | Average Time (ns) |
-| :--- | :--- | :--- |
-| `List<T>` | 100 | 5.711 |
-| `HashSet<T>` | 100 | **1.456** |
-| `List<T>` | 1,000 | 39.353 |
-| `HashSet<T>` | 1,000 | **1.468** |
-| `List<T>` | 10,000 | 249.127 |
-| `HashSet<T>` | 10,000 | **1.932** |
+#### Creation Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 1.18 ±2.44 | 1.12 ±2.19 | 0.93 ±1.92 | 1.07 ±1.99 |
+| **List** | 0.99 ±1.64 | 0.86 ±1.27 | 0.98 ±1.71 | 0.92 ±1.65 |
+| **HashSet** | 1.93 ±3.43 | 1.79 ±3.00 | 4.67 ±15.80 | 1.74 ±3.21 |
+| **Dictionary** | 1.77 ±1.33 | 1.82 ±1.96 | 1.91 ±3.09 | 1.90 ±1.29 |
+| **SortedSet** | 2.62 ±2.71 | 2.43 ±3.12 | 2.49 ±3.87 | 2.22 ±2.33 |
+| **SortedDictionary** | 6.16 ±3.60 | 5.19 ±2.73 | 5.38 ±2.71 | 6.08 ±3.03 |
+| **ConcurrentDictionary** | 5.22 ±2.65 | 5.63 ±3.84 | 5.89 ±4.69 | 6.62 ±3.75 |
+| **ImmutableList** | 1.63 ±0.34 | 1.40 ±0.21 | 1.84 ±1.37 | 2.11 ±2.77 |
+| **ImmutableHashSet** | 4.69 ±2.21 | 4.07 ±1.57 | 4.31 ±2.16 | 4.41 ±2.30 |
 
-### Analysis
+#### Lookup Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 0.30 ±0.12 | 1.09 ±0.15 | 10.59 ±1.66 | 37.22 ±2.80 |
+| **List** | 0.38 ±0.17 | 1.18 ±0.13 | 12.36 ±2.23 | 37.44 ±2.35 |
+| **HashSet** | 0.27 ±0.07 | 1.49 ±0.12 | 17.17 ±1.96 | 98.02 ±4.55 |
+| **Dictionary** | 0.33 ±0.05 | 1.59 ±0.17 | 17.00 ±1.96 | 106.30 ±7.50 |
+| **SortedSet** | 1.22 ±0.12 | 8.88 ±1.05 | 81.35 ±5.73 | 186.58 ±9.28 |
+| **SortedDictionary** | 1.32 ±0.10 | 8.69 ±0.89 | 86.10 ±5.76 | 234.73 ±18.96 |
+| **ConcurrentDictionary** | 0.38 ±0.05 | 2.18 ±0.12 | 25.20 ±4.62 | 129.88 ±21.05 |
+| **ImmutableList** | 1.04 ±0.12 | 6.38 ±0.34 | 71.66 ±3.33 | 550.93 ±34.79 |
+| **ImmutableHashSet** | 0.79 ±0.08 | 5.48 ±0.22 | 93.23 ±195.38 | 162.55 ±8.12 |
 
-- **`List<T>.Contains`**: Performs a linear search with **O(n)** time complexity. The time to find an item increases proportionally with the size of the list.
-- **`HashSet<T>.Contains`**: Performs a hash-based lookup with an average time complexity of **O(1)**. The time to find an item is nearly constant, regardless of the collection's size.
+#### Total Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 1.58 ±2.52 | 2.36 ±2.25 | 11.59 ±2.28 | 38.38 ±4.42 |
+| **List** | 1.48 ±1.78 | 2.14 ±1.33 | 13.48 ±2.64 | 38.46 ±3.68 |
+| **HashSet** | 2.29 ±3.50 | 3.37 ±3.04 | 21.92 ±15.83 | 99.83 ±7.23 |
+| **Dictionary** | 2.20 ±1.35 | 3.53 ±2.06 | 19.03 ±3.18 | 108.30 ±7.69 |
+| **SortedSet** | 3.94 ±2.79 | 11.43 ±3.72 | 83.95 ±5.50 | 188.90 ±9.95 |
+| **SortedDictionary** | 7.60 ±3.62 | 13.98 ±2.78 | 91.59 ±5.55 | 240.92 ±20.62 |
+| **ConcurrentDictionary** | 5.70 ±2.67 | 7.90 ±3.91 | 31.18 ±6.17 | 136.58 ±23.97 |
+| **ImmutableList** | 2.77 ±0.41 | 7.88 ±0.46 | 73.61 ±2.92 | 553.12 ±35.81 |
+| **ImmutableHashSet** | 5.57 ±2.22 | 9.66 ±1.64 | 97.63 ±195.37 | 167.06 ±9.32 |
 
-### Recommendation
+### Medium Collections (N=100)
 
-For frequent lookups (i.e., calling the `Contains` method), **`HashSet<T>` is the clear winner**. Use it when you need fast, efficient checks for the existence of items in a collection that does not contain duplicates.
+#### Creation Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 1.18 ±2.48 | 1.22 ±2.37 | 1.07 ±2.14 | 1.38 ±2.47 |
+| **List** | 1.10 ±1.85 | 0.81 ±1.34 | 1.06 ±1.62 | 1.04 ±1.41 |
+| **HashSet** | 2.71 ±3.09 | 3.02 ±4.05 | 5.81 ±16.27 | 3.70 ±5.72 |
+| **Dictionary** | 4.36 ±1.30 | 4.64 ±1.67 | 4.81 ±3.71 | 4.90 ±1.11 |
+| **SortedSet** | 11.40 ±4.69 | 12.52 ±4.79 | 10.02 ±3.59 | 11.88 ±4.55 |
+| **SortedDictionary** | 32.69 ±4.61 | 32.32 ±5.26 | 35.73 ±5.72 | 37.36 ±4.22 |
+| **ConcurrentDictionary** | 17.42 ±2.95 | 18.55 ±5.06 | 18.70 ±5.10 | 21.58 ±6.03 |
+| **ImmutableList** | 7.02 ±3.43 | 7.77 ±3.67 | 9.75 ±4.05 | 42.65 ±201.03 |
+| **ImmutableHashSet** | 32.44 ±9.10 | 31.09 ±3.59 | 34.41 ±3.61 | 32.48 ±4.73 |
 
-# Collection Performance Benchmarks
+#### Lookup Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 0.41 ±0.11 | 1.47 ±0.14 | 16.80 ±2.36 | 119.82 ±6.86 |
+| **List** | 0.59 ±0.20 | 1.45 ±0.15 | 18.53 ±2.77 | 108.64 ±7.97 |
+| **HashSet** | 0.31 ±0.07 | 1.54 ±0.17 | 17.75 ±2.10 | 117.18 ±4.14 |
+| **Dictionary** | 0.32 ±0.06 | 1.54 ±0.10 | 17.34 ±2.25 | 119.86 ±4.44 |
+| **SortedSet** | 1.71 ±0.14 | 16.96 ±1.55 | 137.26 ±8.66 | 372.12 ±20.36 |
+| **SortedDictionary** | 1.96 ±0.98 | 17.25 ±1.45 | 170.13 ±15.31 | 515.59 ±8.63 |
+| **ConcurrentDictionary** | 0.46 ±0.07 | 2.39 ±0.14 | 28.79 ±4.44 | 177.26 ±22.26 |
+| **ImmutableList** | 5.98 ±0.29 | 56.72 ±5.95 | 611.68 ±27.09 | 4409.84 ±1663.93 |
+| **ImmutableHashSet** | 1.08 ±0.08 | 9.56 ±1.36 | 98.19 ±10.76 | 300.62 ±30.76 |
 
-This document contains comprehensive performance analysis of `List<T>` vs `HashSet<T>` for real-world scenarios that include both creation and lookup operations.
+#### Total Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 1.69 ±2.54 | 2.79 ±2.43 | 17.98 ±2.67 | 121.31 ±7.56 |
+| **List** | 1.79 ±1.96 | 2.34 ±1.43 | 19.69 ±2.83 | 109.79 ±8.90 |
+| **HashSet** | 3.08 ±3.10 | 4.66 ±4.15 | 23.65 ±16.15 | 121.00 ±7.63 |
+| **Dictionary** | 4.79 ±1.30 | 6.28 ±1.71 | 22.25 ±3.91 | 124.85 ±4.98 |
+| **SortedSet** | 13.22 ±4.71 | 29.58 ±5.22 | 147.35 ±9.16 | 384.11 ±21.77 |
+| **SortedDictionary** | 34.78 ±4.54 | 49.67 ±5.93 | 205.95 ±16.06 | 553.06 ±8.43 |
+| **ConcurrentDictionary** | 19.64 ±3.27 | 22.36 ±5.56 | 50.04 ±6.58 | 200.97 ±25.56 |
+| **ImmutableList** | 13.10 ±3.53 | 64.58 ±6.28 | 621.53 ±29.69 | 4452.63 ±1722.88 |
+| **ImmutableHashSet** | 33.62 ±9.13 | 40.75 ±4.01 | 132.71 ±9.82 | 333.18 ±30.86 |
 
-## Creation + Lookup Performance Results
+### Large Collections (N=1,000)
 
-The benchmarks measure the combined time of creating a collection and performing multiple lookups, which represents more realistic usage patterns.
+#### Creation Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 9.42 ±5.87 | 5.95 ±3.07 | 6.41 ±3.93 | 8.37 ±4.99 |
+| **List** | 7.39 ±4.58 | 5.93 ±2.90 | 7.90 ±3.39 | 6.48 ±3.51 |
+| **HashSet** | 26.26 ±6.14 | 26.13 ±6.42 | 29.93 ±16.99 | 27.78 ±6.00 |
+| **Dictionary** | 51.48 ±6.71 | 52.21 ±7.51 | 55.53 ±10.28 | 69.00 ±88.14 |
+| **SortedSet** | 76.41 ±10.74 | 81.39 ±8.77 | 88.96 ±13.16 | 106.19 ±155.55 |
+| **SortedDictionary** | 357.69 ±22.88 | 363.27 ±22.99 | 405.17 ±25.59 | 455.99 ±264.17 |
+| **ConcurrentDictionary** | 170.44 ±24.89 | 182.49 ±175.07 | 194.56 ±206.45 | 216.94 ±247.72 |
+| **ImmutableList** | 39.38 ±7.49 | 40.48 ±7.30 | 80.61 ±217.69 | 38.86 ±17.37 |
+| **ImmutableHashSet** | 376.04 ±23.62 | 391.73 ±31.70 | 510.66 ±521.26 | 387.23 ±27.47 |
 
-### Summary Table
+#### Lookup Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 1.46 ±0.23 | 9.94 ±0.10 | 114.43 ±2.62 | 1075.43 ±35.20 |
+| **List** | 1.30 ±0.15 | 10.12 ±0.82 | 114.63 ±2.54 | 962.67 ±19.42 |
+| **HashSet** | 0.32 ±0.09 | 1.65 ±0.13 | 19.29 ±2.42 | 118.55 ±5.40 |
+| **Dictionary** | 0.41 ±0.06 | 1.88 ±0.13 | 19.24 ±3.91 | 121.38 ±6.33 |
+| **SortedSet** | 2.21 ±0.14 | 24.26 ±2.25 | 220.51 ±18.33 | 602.66 ±39.28 |
+| **SortedDictionary** | 2.40 ±0.11 | 24.84 ±1.91 | 246.93 ±18.71 | 811.43 ±19.58 |
+| **ConcurrentDictionary** | 0.53 ±0.07 | 2.41 ±0.11 | 29.36 ±4.43 | 177.94 ±23.42 |
+| **ImmutableList** | 55.12 ±3.93 | 545.80 ±9.32 | 4427.22 ±1622.43 | 21691.81 ±2126.67 |
+| **ImmutableHashSet** | 1.37 ±0.11 | 14.43 ±1.91 | 134.31 ±20.62 | 491.20 ±27.48 |
 
-| Collection Size | Lookups | List<T> (μs) | HashSet<T> (μs) | Winner | Performance Ratio |
-|:---|:---|---:|---:|:---|---:|
-| 100 | 10 | 0.094 | 0.536 | **List** | 5.7x faster |
-| 100 | 100 | 0.658 | 0.775 | **List** | 1.2x faster |
-| 100 | 1000 | 7.130 | 2.856 | **HashSet** | 2.5x faster |
-| 1,000 | 10 | 0.760 | 4.882 | **List** | 6.4x faster |
-| 1,000 | 100 | 5.787 | 5.296 | **HashSet** | 1.1x faster |
-| 1,000 | 1000 | 56.721 | 7.253 | **HashSet** | 7.8x faster |
-| 10,000 | 10 | 6.740 | 100.061 | **List** | 14.9x faster |
-| 10,000 | 100 | 49.063 | 100.478 | **List** | 2.0x faster |
-| 10,000 | 1000 | 450.416 | 110.033 | **HashSet** | 4.1x faster |
-| 100,000 | 10 | 79.343 | 1142.859 | **List** | 14.4x faster |
-| 100,000 | 100 | 617.020 | 1170.574 | **List** | 1.9x faster |
-| 100,000 | 1000 | 6039.243 | 1196.177 | **HashSet** | 5.0x faster |
+#### Total Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 10.99 ±6.03 | 15.97 ±3.08 | 120.95 ±3.78 | 1083.92 ±33.72 |
+| **List** | 8.79 ±4.64 | 16.14 ±2.80 | 122.63 ±4.78 | 969.24 ±20.35 |
+| **HashSet** | 26.68 ±6.13 | 27.92 ±6.41 | 49.32 ±17.42 | 146.41 ±7.43 |
+| **Dictionary** | 54.11 ±7.36 | 56.50 ±8.42 | 77.34 ±12.72 | 192.78 ±88.87 |
+| **SortedSet** | 78.69 ±10.81 | 105.73 ±9.96 | 309.57 ±23.88 | 708.95 ±168.44 |
+| **SortedDictionary** | 360.21 ±22.88 | 388.20 ±21.99 | 652.22 ±38.91 | 1267.56 ±264.41 |
+| **ConcurrentDictionary** | 171.09 ±24.92 | 184.98 ±175.12 | 224.01 ±206.06 | 394.99 ±254.26 |
+| **ImmutableList** | 94.59 ±10.23 | 586.38 ±10.52 | 4507.97 ±1678.56 | 21730.91 ±2124.38 |
+| **ImmutableHashSet** | 377.52 ±23.68 | 406.25 ±30.56 | 645.12 ±537.61 | 878.53 ±51.39 |
 
-### Key Findings
+### Very Large Collections (N=10,000)
 
-#### Break-Even Points
-Based on the benchmark results, here are the break-even points where `HashSet<T>` becomes more efficient:
+#### Creation Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 16.36 ±8.46 | 17.98 ±6.27 | 16.83 ±6.81 | 21.22 ±13.84 |
+| **List** | 17.47 ±5.88 | 16.14 ±4.87 | 17.40 ±7.40 | 16.38 ±16.20 |
+| **HashSet** | 143.58 ±12.18 | 138.79 ±11.76 | 135.04 ±20.94 | 130.00 ±9.28 |
+| **Dictionary** | 148.32 ±9.31 | 131.94 ±12.39 | 145.49 ±6.13 | 130.86 ±7.98 |
+| **SortedSet** | 549.51 ±35.26 | 533.23 ±30.93 | 557.61 ±31.90 | 534.08 ±37.02 |
+| **SortedDictionary** | 4338.02 ±163.32 | 3789.63 ±194.53 | 4003.85 ±196.62 | 3946.77 ±246.12 |
+| **ConcurrentDictionary** | 699.76 ±94.36 | 589.26 ±53.70 | 654.51 ±49.36 | 590.72 ±47.79 |
+| **ImmutableList** | 244.16 ±6.78 | 234.58 ±265.78 | 151.08 ±159.87 | 171.08 ±204.33 |
+| **ImmutableHashSet** | 3981.00 ±228.55 | 3641.79 ±813.67 | 3765.74 ±842.47 | 3358.86 ±863.95 |
 
-- **100 elements**: HashSet wins when performing **≥ 1000 lookups**
-- **1,000 elements**: HashSet wins when performing **≥ 100 lookups**
-- **10,000 elements**: HashSet wins when performing **≥ 1000 lookups**
-- **100,000 elements**: HashSet wins when performing **≥ 1000 lookups**
+#### Lookup Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 8.98 ±0.83 | 96.71 ±7.11 | 854.99 ±14.03 | 7745.85 ±2014.02 |
+| **List** | 9.89 ±0.50 | 97.19 ±10.01 | 869.81 ±38.74 | 6455.15 ±2250.71 |
+| **HashSet** | 0.32 ±0.09 | 1.86 ±0.12 | 19.71 ±2.57 | 122.18 ±7.40 |
+| **Dictionary** | 0.40 ±0.07 | 1.81 ±0.15 | 21.67 ±6.24 | 119.36 ±3.00 |
+| **SortedSet** | 2.95 ±0.22 | 30.03 ±3.21 | 262.58 ±13.96 | 904.04 ±55.88 |
+| **SortedDictionary** | 4.36 ±0.81 | 32.04 ±3.11 | 331.24 ±192.02 | 1120.07 ±68.75 |
+| **ConcurrentDictionary** | 0.89 ±0.43 | 2.62 ±0.10 | 60.91 ±163.83 | 174.76 ±22.24 |
+| **ImmutableList** | 594.55 ±17.11 | 4332.47 ±1460.85 | 21239.72 ±1006.84 | 198042.57 ±4948.98 |
+| **ImmutableHashSet** | 2.24 ±0.51 | 18.65 ±7.14 | 196.45 ±237.84 | 842.16 ±62.56 |
 
-#### Memory Usage
-- `List<T>` uses significantly less memory (456B for 100 items vs 1,864B for HashSet)
-- HashSet memory overhead increases substantially with size (1.7MB vs 400KB for 100,000 items)
-- HashSet triggers more garbage collection, especially for larger collections
+#### Total Time Performance (μs)
+| Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
+|----------------|------------|--------------|---------------|----------------|
+| **Array** | 25.66 ±8.90 | 114.85 ±9.11 | 871.92 ±15.31 | 7767.38 ±2016.53 |
+| **List** | 27.44 ±5.94 | 113.51 ±11.33 | 887.31 ±38.91 | 6472.14 ±2258.04 |
+| **HashSet** | 144.00 ±12.21 | 140.76 ±11.83 | 154.87 ±21.39 | 252.27 ±14.47 |
+| **Dictionary** | 149.24 ±9.22 | 134.08 ±12.65 | 167.65 ±8.45 | 250.47 ±9.87 |
+| **SortedSet** | 552.56 ±35.37 | 563.34 ±32.14 | 820.26 ±38.82 | 1438.20 ±88.70 |
+| **SortedDictionary** | 4342.99 ±163.66 | 3821.83 ±196.13 | 4335.23 ±262.39 | 5067.04 ±306.56 |
+| **ConcurrentDictionary** | 700.83 ±94.79 | 591.98 ±53.78 | 715.52 ±166.90 | 765.60 ±67.83 |
+| **ImmutableList** | 838.86 ±20.71 | 4567.22 ±1574.60 | 21391.03 ±1052.32 | 198214.07 ±4928.54 |
+| **ImmutableHashSet** | 3983.41 ±228.63 | 3660.62 ±817.27 | 3962.36 ±922.61 | 4201.21 ±862.65 |
 
-#### Performance Patterns
+## Key Performance Insights
 
-1. **Small Collections (≤ 1,000 items)**:
-   - List is faster for few lookups due to lower creation cost
-   - HashSet overhead dominates performance for small lookup counts
+### 🥇 Best Performers by Category
 
-2. **Medium Collections (1,000 - 10,000 items)**:
-   - Break-even point occurs around 100-1000 lookups
-   - HashSet creation cost becomes more justified with frequent lookups
+#### Creation Time Champions
+- **Small collections (N≤100)**: Array and List (sub-microsecond performance)
+- **Large collections (N≥1,000)**: Array and List maintain excellent creation performance
 
-3. **Large Collections (≥ 100,000 items)**:
-   - HashSet creation cost is very high but pays off with many lookups
-   - List performance degrades significantly with lookup count
+#### Lookup Time Champions
+- **Hash-based lookups**: HashSet and Dictionary show O(1) performance across all scales
+- **Sequential access**: Array and List excel for small lookup counts
+- **Sorted access**: SortedSet and SortedDictionary provide O(log n) performance
 
-### Recommendations
+#### Total Performance Winners
+- **Small workloads**: Array and List dominate
+- **Medium workloads**: HashSet and Dictionary take the lead
+- **Large workloads**: Hash-based collections maintain superiority
 
-#### Use `List<T>` when:
-- Collection size < 1,000 items AND lookup count < 100
-- Collection size < 10,000 items AND lookup count < 1,000
-- Memory usage is a primary concern
-- You need indexed access to elements
+### 📊 Performance Patterns
 
-#### Use `HashSet<T>` when:
-- You need to perform many lookups (>100 for medium collections, >1000 for large collections)
-- Lookup performance is more critical than creation time
-- You can tolerate higher memory usage
-- You don't need duplicate values
+1. **Scalability**: Hash-based collections (HashSet, Dictionary) show excellent scalability
+2. **Consistency**: Array and List provide very consistent performance with low variance
+3. **Thread Safety Cost**: ConcurrentDictionary shows ~2-3x overhead compared to Dictionary
+4. **Immutability Cost**: Immutable collections show significant performance penalties, especially for large datasets
+5. **Sorted Structure Cost**: SortedSet and SortedDictionary have higher overhead but provide ordering guarantees
 
-#### Special Considerations
-- For one-time operations with few lookups, `List<T>` is almost always better
-- For long-lived collections with frequent Contains() calls, `HashSet<T>` is superior
-- Consider the total lifetime of your collection when making the choice
+### ⚠️ Performance Warnings
+
+- **ImmutableList**: Shows exponential degradation with size, unsuitable for large collections
+- **Large sorted collections**: SortedDictionary creation time becomes prohibitive at N=10,000
+- **High lookup counts**: Sequential collections (Array, List) become inefficient for many lookups
 
 ---
 
-## Extended Collection Performance Analysis
-
-This comprehensive benchmark compares performance across multiple collection types with different data types, providing insights for real-world scenarios.
-
-### Test Configuration
-- **Collection Sizes**: 1,000 and 10,000 elements
-- **Lookup Counts**: 100 and 1,000 lookups per test
-- **Data Types**: int, string, Guid, custom struct (ProductId), custom class (Customer)
-- **Collections Tested**: List, HashSet, SortedSet, Dictionary, SortedDictionary, ConcurrentDictionary, ImmutableList, ImmutableHashSet, Array
-
-### Performance Summary by Collection Type
-
-#### Hash-Based Collections (Best for Lookups)
-| Collection | 1K items, 100 lookups | 1K items, 1K lookups | 10K items, 100 lookups | 10K items, 1K lookups |
-|:---|---:|---:|---:|---:|
-| **HashSet<int>** | 252ns | 2.5μs | 254ns | 3.0μs |
-| **Dictionary<int,bool>** | 241ns | 2.4μs | 251ns | 3.0μs |
-| **ConcurrentDictionary<int,bool>** | 184ns | 2.0μs | 203ns | 2.1μs |
-
-#### Linear Search Collections (Worst for Lookups)
-| Collection | 1K items, 100 lookups | 1K items, 1K lookups | 10K items, 100 lookups | 10K items, 1K lookups |
-|:---|---:|---:|---:|---:|
-| **List<int>** | 5.8μs | 61μs | 48μs | 480μs |
-| **Array<int>** | 5.9μs | 60μs | 48μs | 473μs |
-| **ImmutableList<int>** | 234μs | 2.4ms | 2.8ms | 28ms |
-
-#### Tree-Based Collections (Moderate Performance)
-| Collection | 1K items, 100 lookups | 1K items, 1K lookups | 10K items, 100 lookups | 10K items, 1K lookups |
-|:---|---:|---:|---:|---:|
-| **SortedSet<int>** | 1.5μs | 38μs | 1.6μs | 68μs |
-| **SortedDictionary<int,bool>** | 1.5μs | 40μs | 2.0μs | 68μs |
-
-### Performance by Data Type
-
-#### Integer Collections (Baseline - Fastest)
-```
-HashSet<int>: ~250ns per 100 lookups (regardless of collection size)
-List<int>: 5.8μs → 480μs (scales linearly with size)
-```
-
-#### String Collections (Moderate Overhead)
-```
-HashSet<string>: ~613ns per 100 lookups (2.4x slower than int)
-List<string>: 173μs → 46ms (string comparison overhead)
-SortedSet<string>: 33μs → 551μs (string comparison + tree traversal)
-```
-
-#### Guid Collections (Efficient Structs)
-```
-HashSet<Guid>: ~277ns per 100 lookups (similar to int performance)
-List<Guid>: 52μs → 5.6ms (struct comparison overhead)
-```
-
-#### Custom Struct Collections (ProductId)
-```
-HashSet<ProductId>: ~250ns per 100 lookups (excellent performance)
-List<ProductId>: 25μs → 2.5ms (custom equality comparison)
-```
-
-#### Custom Class Collections (Customer - Reference Types)
-```
-HashSet<Customer>: ~1.1μs → 14μs (reference equality + hash computation)
-List<Customer>: 378μs → 66ms (worst performance due to reference comparison)
-```
-
-### Key Performance Insights
-
-#### 1. Hash Collections Dominate for Lookups
-- **HashSet/Dictionary**: Consistent O(1) performance regardless of collection size
-- **Performance advantage**: 100-1000x faster than linear search for large collections
-- **ConcurrentDictionary**: Surprisingly fastest, even for single-threaded scenarios
-
-#### 2. Data Type Impact Rankings (Best to Worst)
-1. **Primitive types (int)**: Fastest across all collection types
-2. **Small structs (Guid, ProductId)**: Near-primitive performance
-3. **Strings**: ~2-3x overhead due to string hashing/comparison
-4. **Custom classes**: Highest overhead due to reference equality
-
-#### 3. Collection Type Performance Tiers
-
-**Tier 1 - Excellent (Sub-microsecond)**
-- HashSet<T>
-- Dictionary<TKey, TValue>
-- ConcurrentDictionary<TKey, TValue>
-
-**Tier 2 - Good (Low microseconds)**
-- SortedSet<T> (for small collections)
-- SortedDictionary<TKey, TValue> (for small collections)
-- ImmutableHashSet<T>
-
-**Tier 3 - Poor (High microseconds to milliseconds)**
-- List<T>.Contains()
-- Array search
-- SortedSet<T> (for large collections)
-
-**Tier 4 - Terrible (Milliseconds)**
-- ImmutableList<T>.Contains()
-
-### Scalability Analysis
-
-#### Hash Collections: O(1) - Constant Time
-```
-HashSet performance remains constant:
-- 1K items: ~250ns
-- 10K items: ~250ns
-- Performance difference: <5%
-```
-
-#### Linear Collections: O(n) - Linear Growth
-```
-List performance scales linearly:
-- 1K items: 61μs (1K lookups)
-- 10K items: 480μs (1K lookups)
-- Performance degradation: 8x worse
-```
-
-#### Tree Collections: O(log n) - Logarithmic Growth
-```
-SortedSet performance scales logarithmically:
-- 1K items: 38μs (1K lookups)
-- 10K items: 68μs (1K lookups)
-- Performance degradation: 1.8x worse
-```
-
-### Memory Considerations
-
-#### Memory Efficiency Rankings
-1. **Array/List**: Most memory efficient
-2. **SortedSet/SortedDictionary**: Moderate overhead (tree structure)
-3. **HashSet/Dictionary**: Higher overhead (hash buckets)
-4. **ConcurrentDictionary**: Highest overhead (thread-safety structures)
-
-### Real-World Recommendations
-
-#### Use HashSet<T>/Dictionary<TKey,TValue> when:
-- You need frequent lookups (>10 lookups per collection lifetime)
-- Collection size > 100 items
-- Lookup performance is critical
-- You don't need ordered data
-
-#### Use List<T> when:
-- Few lookups (<10 per collection lifetime)
-- Small collections (<100 items)
-- Memory usage is critical
-- You need indexed access
-- You need ordered data
-
-#### Use SortedSet<T>/SortedDictionary<TKey,TValue> when:
-- You need both lookups AND sorted iteration
-- Moderate lookup performance is acceptable
-- Collection size is small-to-medium (<10K items)
-
-#### Avoid ImmutableList<T> for lookups:
-- 100-10,000x slower than alternatives
-- Only use when immutability is absolutely required
-- Consider ImmutableHashSet<T> as alternative
-
-#### Consider ConcurrentDictionary<TKey,TValue> when:
-- You need thread-safe operations
-- Surprisingly good performance even for single-threaded scenarios
-- Can tolerate higher memory usage
-
-### Performance Impact Examples
-
-#### Small Collection (1K items, 100 lookups)
-```csharp
-// Excellent choices (sub-microsecond)
-HashSet<int>.Contains()     // 252ns
-Dictionary<int,bool>        // 241ns
-ConcurrentDictionary        // 184ns
-
-// Poor choices (multiple microseconds)
-List<int>.Contains()        // 5.8μs (23x slower)
-SortedSet<int>.Contains()   // 1.5μs (6x slower)
-
-// Terrible choice
-ImmutableList<int>          // 234μs (1000x slower)
-```
-
-#### Large Collection (10K items, 1K lookups)
-```csharp
-// The performance gap widens dramatically:
-HashSet<int>                // 3.0μs
-List<int>                   // 480μs (160x slower!)
-ImmutableList<int>          // 28ms (9,300x slower!)
-```
-
-### Conclusion
-
-For lookup operations, **hash-based collections (HashSet, Dictionary) are almost always the right choice** unless you have very specific requirements. The performance difference becomes more dramatic as collection size and lookup frequency increase, making the choice of collection type one of the most impactful performance decisions in C# development.
+*Statistics format: Mean ±Standard Deviation (all times in microseconds)*
+*Outliers removed using Z-score > 2.0 threshold*

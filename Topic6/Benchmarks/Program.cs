@@ -93,7 +93,8 @@ namespace Benchmarks
                 case "integer":
                 case "":
                     Console.WriteLine("Running INTEGER benchmarks...");
-                    BenchmarkRunner.Run<IntegerBenchmarks>();
+                    var intBenchmarks = new IntegerBenchmarks();
+                    intBenchmarks.RunManual();
                     break;
                     
                 case "string":
@@ -110,7 +111,8 @@ namespace Benchmarks
                 case "all":
                     Console.WriteLine("Running ALL benchmark types...");
                     Console.WriteLine("\n1/3 Running INTEGER benchmarks...");
-                    BenchmarkRunner.Run<IntegerBenchmarks>();
+                    var allIntBenchmarks = new IntegerBenchmarks();
+                    allIntBenchmarks.RunManual();
                     Console.WriteLine("\n2/3 Running STRING benchmarks...");
                     BenchmarkRunner.Run<StringBenchmarks>();
                     Console.WriteLine("\n3/3 Running GUID benchmarks...");

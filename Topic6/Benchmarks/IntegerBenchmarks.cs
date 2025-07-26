@@ -6,32 +6,76 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Engines;
 
 namespace Benchmarks
 {
-    [SimpleJob(RunStrategy.Monitoring, warmupCount: IntegerBenchmarks.WarmupIterations, iterationCount: IntegerBenchmarks.ActualIterations)]
-    [MemoryDiagnoser]
     public class IntegerBenchmarks
     {
         // Benchmark iteration constants
         public const int WarmupIterations = 5;
         public const int ActualIterations = 50;
 
-        [Params(10, 100, 1000, 10000)]
-        public int N { get; set; }
-
-        [Params(10, 100, 1000, 10000)]
-        public int LookupCount { get; set; }
+        private int N { get; set; }
+        private int LookupCount { get; set; }
 
         private int[] intSourceData = null!;
         private int[] intLookupItems = null!;
         private static readonly object _fileLock = new object();
         private int _iterationCount = 0;
 
-        [GlobalSetup]
+        public void RunManual()
+        {
+            var nValues = new[] { 10, 100, 1000, 10000 };
+            var lookupValues = new[] { 10, 100, 1000, 10000 };
+
+            foreach (var n in nValues)
+            {
+                foreach (var lookupCount in lookupValues)
+                {
+                    N = n;
+                    LookupCount = lookupCount;
+                    
+                    Console.WriteLine($"\nRunning for N={N}, LookupCount={LookupCount}");
+                    
+                    Setup();
+                    
+                    _iterationCount = 0;
+                    
+                    for (int i = 0; i < WarmupIterations + ActualIterations; i++)
+                    {
+                        IterationSetup();
+                        
+                        IntList();
+                        IterationCleanup();
+                        
+                        IntHashSet();
+                        IterationCleanup();
+                        
+                        IntSortedSet();
+                        IterationCleanup();
+                        
+                        IntDictionary();
+                        IterationCleanup();
+                        
+                        IntSortedDictionary();
+                        IterationCleanup();
+                        
+                        IntConcurrentDictionary();
+                        IterationCleanup();
+                        
+                        IntImmutableList();
+                        IterationCleanup();
+                        
+                        IntImmutableHashSet();
+                        IterationCleanup();
+                        
+                        IntArray();
+                        IterationCleanup();
+                    }
+                }
+            }
+        }
+
         public void Setup()
         {
             var random = new Random(42);
@@ -39,7 +83,6 @@ namespace Benchmarks
             intLookupItems = Enumerable.Range(1, LookupCount).Select(i => random.Next()).ToArray();
         }
 
-        [IterationSetup]
         public void IterationSetup()
         {
             _iterationCount++;
@@ -87,7 +130,6 @@ namespace Benchmarks
             }
         }
 
-        [IterationCleanup]
         public void IterationCleanup()
         {
             // Force garbage collection between iterations to prevent memory pressure interference
@@ -96,8 +138,7 @@ namespace Benchmarks
             GC.Collect();
         }
 
-        [Benchmark]
-        public double IntList()
+        public void IntList()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -116,12 +157,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("List", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntHashSet()
+        public void IntHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -140,11 +178,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("HashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntSortedSet()
+        public void IntSortedSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -163,11 +199,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("SortedSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntDictionary()
+        public void IntDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -186,11 +220,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("Dictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntSortedDictionary()
+        public void IntSortedDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -209,11 +241,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("SortedDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntConcurrentDictionary()
+        public void IntConcurrentDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -232,11 +262,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ConcurrentDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntImmutableList()
+        public void IntImmutableList()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -255,11 +283,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ImmutableList", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntImmutableHashSet()
+        public void IntImmutableHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -278,11 +304,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ImmutableHashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double IntArray()
+        public void IntArray()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -301,7 +325,6 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
     }
 }

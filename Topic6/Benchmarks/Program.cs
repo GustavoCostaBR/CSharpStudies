@@ -83,7 +83,7 @@ namespace Benchmarks
         private static void RunBenchmarks(string dataType)
         {
             Console.WriteLine("=== Running Performance Benchmarks ===");
-            Console.WriteLine("This will run collection benchmarks with 30 parallel tasks each.");
+            Console.WriteLine("This will run collection benchmarks with detailed timing measurements.");
             Console.WriteLine("This may take several minutes to complete...");
             Console.WriteLine();
 
@@ -93,28 +93,28 @@ namespace Benchmarks
                 case "integer":
                 case "":
                     Console.WriteLine("Running INTEGER benchmarks...");
-                    BenchmarkRunner.Run<ParallelizedIntegerBenchmarks>();
+                    BenchmarkRunner.Run<IntegerBenchmarks>();
                     break;
                     
                 case "string":
                 case "str":
                     Console.WriteLine("Running STRING benchmarks...");
-                    BenchmarkRunner.Run<ParallelizedStringBenchmarks>();
+                    BenchmarkRunner.Run<StringBenchmarks>();
                     break;
 
                 case "guid":
                     Console.WriteLine("Running GUID benchmarks...");
-                    BenchmarkRunner.Run<ParallelizedGuidBenchmarks>();
+                    BenchmarkRunner.Run<GuidBenchmarks>();
                     break;
                     
                 case "all":
                     Console.WriteLine("Running ALL benchmark types...");
                     Console.WriteLine("\n1/3 Running INTEGER benchmarks...");
-                    BenchmarkRunner.Run<ParallelizedIntegerBenchmarks>();
+                    BenchmarkRunner.Run<IntegerBenchmarks>();
                     Console.WriteLine("\n2/3 Running STRING benchmarks...");
-                    BenchmarkRunner.Run<ParallelizedStringBenchmarks>();
+                    BenchmarkRunner.Run<StringBenchmarks>();
                     Console.WriteLine("\n3/3 Running GUID benchmarks...");
-                    BenchmarkRunner.Run<ParallelizedGuidBenchmarks>();
+                    BenchmarkRunner.Run<GuidBenchmarks>();
                     break;
                     
                 default:
@@ -153,9 +153,9 @@ namespace Benchmarks
                 case "int":
                 case "integer":
                 default:
-                    resultsFileName = "detailed_results.txt";
-                    summaryFileName = "statistical_summary.csv";
-                    reportFileName = "performance_report.md";
+                    resultsFileName = "detailed_results_integer.txt";
+                    summaryFileName = "statistical_summary_integer.csv";
+                    reportFileName = "performance_report_integer.md";
                     Console.WriteLine("Analyzing INTEGER benchmark results...");
                     break;
             }

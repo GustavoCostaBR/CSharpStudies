@@ -1,13 +1,14 @@
 # C# Collection Performance Benchmarks
 
-This document contains comprehensive performance benchmark results for various C# collection types. The benchmarks were conducted using BenchmarkDotNet with multiple scenarios testing creation time, lookup time, and total time performance.
+This document contains comprehensive performance benchmark results for various C# collection types. The benchmarks were conducted using BenchmarkDotNet with enhanced reliability measures including forced garbage collection between iterations and increased sample sizes.
 
 ## Test Scenarios
 
 - **Collection Types**: Array, List, HashSet, SortedSet, Dictionary, SortedDictionary, ConcurrentDictionary, ImmutableList, ImmutableHashSet
 - **Collection Sizes (N)**: 10, 100, 1,000, 10,000 elements
 - **Lookup Counts**: 10, 100, 1,000, 10,000 lookups per test
-- **Sample Size**: 34 runs per scenario with outlier detection (Z-score > 2.0)
+- **Sample Size**: 56 runs per scenario with outlier detection (Z-score > 2.0)
+- **Reliability Enhancements**: Forced GC between iterations, increased warmup (5 iterations), increased test iterations (50)
 
 ## Performance Summary by Collection Size
 
@@ -16,198 +17,194 @@ This document contains comprehensive performance benchmark results for various C
 #### Creation Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 1.18 ±2.44 | 1.12 ±2.19 | 0.93 ±1.92 | 1.07 ±1.99 |
-| **List** | 0.99 ±1.64 | 0.86 ±1.27 | 0.98 ±1.71 | 0.92 ±1.65 |
-| **HashSet** | 1.93 ±3.43 | 1.79 ±3.00 | 4.67 ±15.80 | 1.74 ±3.21 |
-| **Dictionary** | 1.77 ±1.33 | 1.82 ±1.96 | 1.91 ±3.09 | 1.90 ±1.29 |
-| **SortedSet** | 2.62 ±2.71 | 2.43 ±3.12 | 2.49 ±3.87 | 2.22 ±2.33 |
-| **SortedDictionary** | 6.16 ±3.60 | 5.19 ±2.73 | 5.38 ±2.71 | 6.08 ±3.03 |
-| **ConcurrentDictionary** | 5.22 ±2.65 | 5.63 ±3.84 | 5.89 ±4.69 | 6.62 ±3.75 |
-| **ImmutableList** | 1.63 ±0.34 | 1.40 ±0.21 | 1.84 ±1.37 | 2.11 ±2.77 |
-| **ImmutableHashSet** | 4.69 ±2.21 | 4.07 ±1.57 | 4.31 ±2.16 | 4.41 ±2.30 |
+| **Array** | 1.133 ±1.878 | 1.211 ±2.612 | 0.987 ±2.056 | 1.407 ±3.404 |
+| **List** | 0.962 ±1.500 | 0.971 ±1.466 | 0.930 ±1.448 | 0.833 ±1.022 |
+| **HashSet** | 1.958 ±2.665 | 1.665 ±2.703 | 4.425 ±16.762 | 1.764 ±2.334 |
+| **Dictionary** | 1.736 ±0.974 | 1.745 ±1.136 | 1.906 ±1.120 | 1.925 ±1.349 |
+| **SortedSet** | 2.673 ±2.696 | 2.462 ±2.623 | 2.380 ±2.509 | 2.380 ±2.342 |
+| **SortedDictionary** | 5.913 ±2.687 | 5.804 ±2.484 | 5.620 ±2.348 | 5.780 ±2.640 |
+| **ConcurrentDictionary** | 6.327 ±2.511 | 6.560 ±3.157 | 5.746 ±2.681 | 6.104 ±2.563 |
+| **ImmutableList** | 1.822 ±0.733 | 1.465 ±0.361 | 1.641 ±0.317 | 1.542 ±0.305 |
+| **ImmutableHashSet** | 4.315 ±1.405 | 4.547 ±1.711 | 5.169 ±2.454 | 4.864 ±1.553 |
 
 #### Lookup Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 0.30 ±0.12 | 1.09 ±0.15 | 10.59 ±1.66 | 37.22 ±2.80 |
-| **List** | 0.38 ±0.17 | 1.18 ±0.13 | 12.36 ±2.23 | 37.44 ±2.35 |
-| **HashSet** | 0.27 ±0.07 | 1.49 ±0.12 | 17.17 ±1.96 | 98.02 ±4.55 |
-| **Dictionary** | 0.33 ±0.05 | 1.59 ±0.17 | 17.00 ±1.96 | 106.30 ±7.50 |
-| **SortedSet** | 1.22 ±0.12 | 8.88 ±1.05 | 81.35 ±5.73 | 186.58 ±9.28 |
-| **SortedDictionary** | 1.32 ±0.10 | 8.69 ±0.89 | 86.10 ±5.76 | 234.73 ±18.96 |
-| **ConcurrentDictionary** | 0.38 ±0.05 | 2.18 ±0.12 | 25.20 ±4.62 | 129.88 ±21.05 |
-| **ImmutableList** | 1.04 ±0.12 | 6.38 ±0.34 | 71.66 ±3.33 | 550.93 ±34.79 |
-| **ImmutableHashSet** | 0.79 ±0.08 | 5.48 ±0.22 | 93.23 ±195.38 | 162.55 ±8.12 |
+| **Array** | 0.325 ±0.100 | 1.253 ±0.459 | 10.972 ±1.768 | 41.316 ±6.794 |
+| **List** | 0.416 ±0.151 | 1.240 ±0.251 | 12.302 ±3.289 | 37.073 ±5.316 |
+| **HashSet** | 0.342 ±0.121 | 1.727 ±0.091 | 18.784 ±2.093 | 102.647 ±5.316 |
+| **Dictionary** | 0.356 ±0.066 | 1.665 ±0.102 | 18.778 ±2.194 | 107.976 ±4.098 |
+| **SortedSet** | 1.220 ±0.122 | 9.000 ±0.867 | 83.640 ±6.033 | 189.167 ±9.439 |
+| **SortedDictionary** | 1.324 ±0.102 | 8.782 ±0.906 | 87.738 ±5.927 | 242.433 ±19.389 |
+| **ConcurrentDictionary** | 0.433 ±0.051 | 2.496 ±0.058 | 22.041 ±4.388 | 126.471 ±14.166 |
+| **ImmutableList** | 1.140 ±0.091 | 7.662 ±0.089 | 74.391 ±6.421 | 590.018 ±32.436 |
+| **ImmutableHashSet** | 0.856 ±0.060 | 6.524 ±1.069 | 64.715 ±9.489 | 182.098 ±7.072 |
 
 #### Total Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 1.58 ±2.52 | 2.36 ±2.25 | 11.59 ±2.28 | 38.38 ±4.42 |
-| **List** | 1.48 ±1.78 | 2.14 ±1.33 | 13.48 ±2.64 | 38.46 ±3.68 |
-| **HashSet** | 2.29 ±3.50 | 3.37 ±3.04 | 21.92 ±15.83 | 99.83 ±7.23 |
-| **Dictionary** | 2.20 ±1.35 | 3.53 ±2.06 | 19.03 ±3.18 | 108.30 ±7.69 |
-| **SortedSet** | 3.94 ±2.79 | 11.43 ±3.72 | 83.95 ±5.50 | 188.90 ±9.95 |
-| **SortedDictionary** | 7.60 ±3.62 | 13.98 ±2.78 | 91.59 ±5.55 | 240.92 ±20.62 |
-| **ConcurrentDictionary** | 5.70 ±2.67 | 7.90 ±3.91 | 31.18 ±6.17 | 136.58 ±23.97 |
-| **ImmutableList** | 2.77 ±0.41 | 7.88 ±0.46 | 73.61 ±2.92 | 553.12 ±35.81 |
-| **ImmutableHashSet** | 5.57 ±2.22 | 9.66 ±1.64 | 97.63 ±195.37 | 167.06 ±9.32 |
+| **Array** | 1.582 ±1.920 | 2.582 ±2.713 | 12.094 ±2.710 | 42.847 ±7.880 |
+| **List** | 1.475 ±1.619 | 2.331 ±1.593 | 13.335 ±3.513 | 37.987 ±5.520 |
+| **HashSet** | 2.420 ±2.686 | 3.495 ±2.746 | 23.311 ±16.538 | 104.518 ±6.031 |
+| **Dictionary** | 2.184 ±0.999 | 3.531 ±1.168 | 20.776 ±2.228 | 110.011 ±4.703 |
+| **SortedSet** | 3.989 ±2.748 | 11.555 ±3.235 | 86.113 ±6.122 | 191.640 ±10.019 |
+| **SortedDictionary** | 7.327 ±2.754 | 14.678 ±2.887 | 93.453 ±6.036 | 248.302 ±20.679 |
+| **ConcurrentDictionary** | 6.860 ±2.540 | 9.187 ±3.136 | 27.874 ±5.401 | 132.653 ±16.380 |
+| **ImmutableList** | 3.073 ±0.775 | 9.233 ±0.427 | 76.133 ±6.462 | 591.647 ±32.575 |
+| **ImmutableHashSet** | 5.247 ±1.411 | 11.162 ±2.026 | 69.983 ±9.751 | 187.065 ±7.499 |
 
 ### Medium Collections (N=100)
 
 #### Creation Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 1.18 ±2.48 | 1.22 ±2.37 | 1.07 ±2.14 | 1.38 ±2.47 |
-| **List** | 1.10 ±1.85 | 0.81 ±1.34 | 1.06 ±1.62 | 1.04 ±1.41 |
-| **HashSet** | 2.71 ±3.09 | 3.02 ±4.05 | 5.81 ±16.27 | 3.70 ±5.72 |
-| **Dictionary** | 4.36 ±1.30 | 4.64 ±1.67 | 4.81 ±3.71 | 4.90 ±1.11 |
-| **SortedSet** | 11.40 ±4.69 | 12.52 ±4.79 | 10.02 ±3.59 | 11.88 ±4.55 |
-| **SortedDictionary** | 32.69 ±4.61 | 32.32 ±5.26 | 35.73 ±5.72 | 37.36 ±4.22 |
-| **ConcurrentDictionary** | 17.42 ±2.95 | 18.55 ±5.06 | 18.70 ±5.10 | 21.58 ±6.03 |
-| **ImmutableList** | 7.02 ±3.43 | 7.77 ±3.67 | 9.75 ±4.05 | 42.65 ±201.03 |
-| **ImmutableHashSet** | 32.44 ±9.10 | 31.09 ±3.59 | 34.41 ±3.61 | 32.48 ±4.73 |
+| **Array** | 1.053 ±1.995 | 1.091 ±1.841 | 1.106 ±1.889 | 1.162 ±1.802 |
+| **List** | 1.060 ±1.757 | 0.989 ±1.612 | 1.018 ±1.558 | 0.953 ±1.224 |
+| **HashSet** | 3.176 ±3.948 | 3.218 ±3.276 | 5.196 ±16.032 | 3.131 ±2.890 |
+| **Dictionary** | 5.055 ±1.540 | 4.945 ±1.242 | 4.978 ±1.104 | 5.084 ±1.579 |
+| **SortedSet** | 11.687 ±4.516 | 11.620 ±4.320 | 11.536 ±4.142 | 11.749 ±4.569 |
+| **SortedDictionary** | 33.113 ±4.680 | 32.658 ±4.758 | 33.062 ±4.972 | 33.429 ±4.442 |
+| **ConcurrentDictionary** | 21.462 ±5.221 | 21.251 ±3.215 | 21.093 ±5.390 | 21.551 ±3.887 |
+| **ImmutableList** | 9.564 ±3.648 | 10.195 ±3.991 | 11.130 ±4.294 | 30.838 ±145.460 |
+| **ImmutableHashSet** | 36.064 ±3.739 | 33.942 ±5.068 | 36.848 ±6.332 | 37.371 ±4.848 |
 
 #### Lookup Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 0.41 ±0.11 | 1.47 ±0.14 | 16.80 ±2.36 | 119.82 ±6.86 |
-| **List** | 0.59 ±0.20 | 1.45 ±0.15 | 18.53 ±2.77 | 108.64 ±7.97 |
-| **HashSet** | 0.31 ±0.07 | 1.54 ±0.17 | 17.75 ±2.10 | 117.18 ±4.14 |
-| **Dictionary** | 0.32 ±0.06 | 1.54 ±0.10 | 17.34 ±2.25 | 119.86 ±4.44 |
-| **SortedSet** | 1.71 ±0.14 | 16.96 ±1.55 | 137.26 ±8.66 | 372.12 ±20.36 |
-| **SortedDictionary** | 1.96 ±0.98 | 17.25 ±1.45 | 170.13 ±15.31 | 515.59 ±8.63 |
-| **ConcurrentDictionary** | 0.46 ±0.07 | 2.39 ±0.14 | 28.79 ±4.44 | 177.26 ±22.26 |
-| **ImmutableList** | 5.98 ±0.29 | 56.72 ±5.95 | 611.68 ±27.09 | 4409.84 ±1663.93 |
-| **ImmutableHashSet** | 1.08 ±0.08 | 9.56 ±1.36 | 98.19 ±10.76 | 300.62 ±30.76 |
+| **Array** | 0.467 ±0.128 | 1.545 ±0.121 | 17.633 ±2.007 | 111.758 ±7.885 |
+| **List** | 0.549 ±0.197 | 1.520 ±0.127 | 18.502 ±2.764 | 108.651 ±7.997 |
+| **HashSet** | 0.362 ±0.065 | 1.749 ±0.141 | 19.358 ±1.946 | 116.678 ±5.501 |
+| **Dictionary** | 0.375 ±0.064 | 1.725 ±0.597 | 19.559 ±4.246 | 119.462 ±9.872 |
+| **SortedSet** | 1.711 ±0.142 | 17.087 ±1.550 | 139.578 ±8.721 | 376.942 ±20.513 |
+| **SortedDictionary** | 1.982 ±0.982 | 17.373 ±1.467 | 171.731 ±15.458 | 522.080 ±8.751 |
+| **ConcurrentDictionary** | 0.553 ±0.074 | 2.755 ±0.107 | 30.113 ±6.033 | 173.591 ±19.792 |
+| **ImmutableList** | 6.856 ±0.411 | 67.600 ±4.937 | 662.704 ±31.389 | 5039.748 ±1553.148 |
+| **ImmutableHashSet** | 1.278 ±0.092 | 11.109 ±4.340 | 93.717 ±9.776 | 328.489 ±16.905 |
 
 #### Total Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 1.69 ±2.54 | 2.79 ±2.43 | 17.98 ±2.67 | 121.31 ±7.56 |
-| **List** | 1.79 ±1.96 | 2.34 ±1.43 | 19.69 ±2.83 | 109.79 ±8.90 |
-| **HashSet** | 3.08 ±3.10 | 4.66 ±4.15 | 23.65 ±16.15 | 121.00 ±7.63 |
-| **Dictionary** | 4.79 ±1.30 | 6.28 ±1.71 | 22.25 ±3.91 | 124.85 ±4.98 |
-| **SortedSet** | 13.22 ±4.71 | 29.58 ±5.22 | 147.35 ±9.16 | 384.11 ±21.77 |
-| **SortedDictionary** | 34.78 ±4.54 | 49.67 ±5.93 | 205.95 ±16.06 | 553.06 ±8.43 |
-| **ConcurrentDictionary** | 19.64 ±3.27 | 22.36 ±5.56 | 50.04 ±6.58 | 200.97 ±25.56 |
-| **ImmutableList** | 13.10 ±3.53 | 64.58 ±6.28 | 621.53 ±29.69 | 4452.63 ±1722.88 |
-| **ImmutableHashSet** | 33.62 ±9.13 | 40.75 ±4.01 | 132.71 ±9.82 | 333.18 ±30.86 |
+| **Array** | 1.618 ±2.054 | 2.715 ±1.869 | 18.844 ±2.545 | 113.031 ±8.512 |
+| **List** | 1.709 ±1.871 | 2.597 ±1.664 | 19.620 ±2.823 | 109.695 ±8.866 |
+| **HashSet** | 3.671 ±3.951 | 5.091 ±3.322 | 24.655 ±16.101 | 119.895 ±6.291 |
+| **Dictionary** | 5.547 ±1.571 | 6.760 ±1.431 | 24.652 ±4.196 | 124.644 ±10.598 |
+| **SortedSet** | 13.522 ±4.549 | 28.829 ±5.313 | 151.235 ±9.192 | 388.802 ±21.813 |
+| **SortedDictionary** | 35.211 ±4.573 | 50.143 ±5.903 | 204.909 ±16.136 | 555.622 ±8.530 |
+| **ConcurrentDictionary** | 24.578 ±5.578 | 26.698 ±4.089 | 53.630 ±8.550 | 197.671 ±21.440 |
+| **ImmutableList** | 16.542 ±3.769 | 77.924 ±6.532 | 673.935 ±31.766 | 5070.748 ±1585.941 |
+| **ImmutableHashSet** | 37.465 ±3.759 | 45.158 ±7.891 | 130.680 ±8.957 | 365.985 ±17.329 |
 
 ### Large Collections (N=1,000)
 
 #### Creation Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 9.42 ±5.87 | 5.95 ±3.07 | 6.41 ±3.93 | 8.37 ±4.99 |
-| **List** | 7.39 ±4.58 | 5.93 ±2.90 | 7.90 ±3.39 | 6.48 ±3.51 |
-| **HashSet** | 26.26 ±6.14 | 26.13 ±6.42 | 29.93 ±16.99 | 27.78 ±6.00 |
-| **Dictionary** | 51.48 ±6.71 | 52.21 ±7.51 | 55.53 ±10.28 | 69.00 ±88.14 |
-| **SortedSet** | 76.41 ±10.74 | 81.39 ±8.77 | 88.96 ±13.16 | 106.19 ±155.55 |
-| **SortedDictionary** | 357.69 ±22.88 | 363.27 ±22.99 | 405.17 ±25.59 | 455.99 ±264.17 |
-| **ConcurrentDictionary** | 170.44 ±24.89 | 182.49 ±175.07 | 194.56 ±206.45 | 216.94 ±247.72 |
-| **ImmutableList** | 39.38 ±7.49 | 40.48 ±7.30 | 80.61 ±217.69 | 38.86 ±17.37 |
-| **ImmutableHashSet** | 376.04 ±23.62 | 391.73 ±31.70 | 510.66 ±521.26 | 387.23 ±27.47 |
+| **Array** | 7.809 ±3.526 | 7.427 ±3.213 | 7.680 ±3.246 | 8.402 ±3.826 |
+| **List** | 7.440 ±3.438 | 7.064 ±3.114 | 7.300 ±3.234 | 6.862 ±3.042 |
+| **HashSet** | 24.709 ±5.604 | 26.135 ±5.866 | 28.873 ±14.243 | 27.484 ±6.003 |
+| **Dictionary** | 52.565 ±5.867 | 50.989 ±4.670 | 53.289 ±6.714 | 48.459 ±5.157 |
+| **SortedSet** | 81.067 ±10.853 | 81.667 ±10.687 | 81.480 ±10.647 | 82.020 ±10.864 |
+| **SortedDictionary** | 362.287 ±23.045 | 364.880 ±23.178 | 366.680 ±23.331 | 369.420 ±23.551 |
+| **ConcurrentDictionary** | 164.606 ±28.278 | 146.245 ±25.320 | 147.653 ±27.020 | 164.619 ±29.171 |
+| **ImmutableList** | 45.344 ±7.610 | 45.873 ±8.361 | 62.423 ±171.582 | 46.569 ±35.823 |
+| **ImmutableHashSet** | 371.461 ±17.073 | 412.965 ±17.128 | 417.176 ±18.392 | 415.643 ±18.713 |
 
 #### Lookup Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 1.46 ±0.23 | 9.94 ±0.10 | 114.43 ±2.62 | 1075.43 ±35.20 |
-| **List** | 1.30 ±0.15 | 10.12 ±0.82 | 114.63 ±2.54 | 962.67 ±19.42 |
-| **HashSet** | 0.32 ±0.09 | 1.65 ±0.13 | 19.29 ±2.42 | 118.55 ±5.40 |
-| **Dictionary** | 0.41 ±0.06 | 1.88 ±0.13 | 19.24 ±3.91 | 121.38 ±6.33 |
-| **SortedSet** | 2.21 ±0.14 | 24.26 ±2.25 | 220.51 ±18.33 | 602.66 ±39.28 |
-| **SortedDictionary** | 2.40 ±0.11 | 24.84 ±1.91 | 246.93 ±18.71 | 811.43 ±19.58 |
-| **ConcurrentDictionary** | 0.53 ±0.07 | 2.41 ±0.11 | 29.36 ±4.43 | 177.94 ±23.42 |
-| **ImmutableList** | 55.12 ±3.93 | 545.80 ±9.32 | 4427.22 ±1622.43 | 21691.81 ±2126.67 |
-| **ImmutableHashSet** | 1.37 ±0.11 | 14.43 ±1.91 | 134.31 ±20.62 | 491.20 ±27.48 |
+| **Array** | 1.431 ±0.115 | 10.340 ±1.019 | 114.059 ±4.413 | 1070.942 ±21.470 |
+| **List** | 1.380 ±0.133 | 10.176 ±0.831 | 114.640 ±2.548 | 962.400 ±19.473 |
+| **HashSet** | 0.328 ±0.053 | 1.729 ±0.130 | 20.471 ±8.012 | 121.567 ±8.064 |
+| **Dictionary** | 0.380 ±0.068 | 1.885 ±0.545 | 17.702 ±2.071 | 106.061 ±6.117 |
+| **SortedSet** | 2.213 ±0.140 | 24.382 ±2.268 | 222.062 ±18.436 | 608.240 ±39.468 |
+| **SortedDictionary** | 2.407 ±0.109 | 24.947 ±1.935 | 248.422 ±18.833 | 818.762 ±19.701 |
+| **ConcurrentDictionary** | 0.534 ±0.071 | 2.638 ±0.077 | 26.674 ±4.026 | 172.779 ±14.552 |
+| **ImmutableList** | 69.011 ±5.278 | 679.760 ±13.104 | 4937.521 ±2086.523 | 23184.850 ±988.525 |
+| **ImmutableHashSet** | 1.404 ±0.064 | 15.330 ±2.052 | 127.583 ±14.441 | 542.009 ±16.610 |
 
 #### Total Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 10.99 ±6.03 | 15.97 ±3.08 | 120.95 ±3.78 | 1083.92 ±33.72 |
-| **List** | 8.79 ±4.64 | 16.14 ±2.80 | 122.63 ±4.78 | 969.24 ±20.35 |
-| **HashSet** | 26.68 ±6.13 | 27.92 ±6.41 | 49.32 ±17.42 | 146.41 ±7.43 |
-| **Dictionary** | 54.11 ±7.36 | 56.50 ±8.42 | 77.34 ±12.72 | 192.78 ±88.87 |
-| **SortedSet** | 78.69 ±10.81 | 105.73 ±9.96 | 309.57 ±23.88 | 708.95 ±168.44 |
-| **SortedDictionary** | 360.21 ±22.88 | 388.20 ±21.99 | 652.22 ±38.91 | 1267.56 ±264.41 |
-| **ConcurrentDictionary** | 171.09 ±24.92 | 184.98 ±175.12 | 224.01 ±206.06 | 394.99 ±254.26 |
-| **ImmutableList** | 94.59 ±10.23 | 586.38 ±10.52 | 4507.97 ±1678.56 | 21730.91 ±2124.38 |
-| **ImmutableHashSet** | 377.52 ±23.68 | 406.25 ±30.56 | 645.12 ±537.61 | 878.53 ±51.39 |
+| **Array** | 9.336 ±3.592 | 17.864 ±3.537 | 121.826 ±5.644 | 1079.449 ±21.602 |
+| **List** | 8.920 ±3.496 | 17.338 ±3.297 | 122.037 ±4.783 | 969.358 ±20.380 |
+| **HashSet** | 25.148 ±5.613 | 27.985 ±5.865 | 49.476 ±16.709 | 149.171 ±10.693 |
+| **Dictionary** | 55.352 ±6.544 | 55.515 ±5.456 | 73.417 ±7.676 | 156.602 ±8.591 |
+| **SortedSet** | 83.387 ±10.910 | 106.162 ±12.128 | 303.655 ±23.966 | 690.373 ±45.178 |
+| **SortedDictionary** | 364.807 ±23.065 | 389.942 ±22.019 | 615.218 ±39.145 | 1188.298 ±40.754 |
+| **ConcurrentDictionary** | 165.247 ±28.293 | 149.000 ±25.359 | 174.423 ±29.617 | 337.504 ±31.793 |
+| **ImmutableList** | 114.453 ±9.496 | 725.742 ±16.667 | 5000.080 ±2117.437 | 23231.694 ±995.507 |
+| **ImmutableHashSet** | 372.970 ±17.072 | 428.389 ±17.128 | 544.872 ±27.955 | 957.791 ±30.221 |
 
 ### Very Large Collections (N=10,000)
 
 #### Creation Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 16.36 ±8.46 | 17.98 ±6.27 | 16.83 ±6.81 | 21.22 ±13.84 |
-| **List** | 17.47 ±5.88 | 16.14 ±4.87 | 17.40 ±7.40 | 16.38 ±16.20 |
-| **HashSet** | 143.58 ±12.18 | 138.79 ±11.76 | 135.04 ±20.94 | 130.00 ±9.28 |
-| **Dictionary** | 148.32 ±9.31 | 131.94 ±12.39 | 145.49 ±6.13 | 130.86 ±7.98 |
-| **SortedSet** | 549.51 ±35.26 | 533.23 ±30.93 | 557.61 ±31.90 | 534.08 ±37.02 |
-| **SortedDictionary** | 4338.02 ±163.32 | 3789.63 ±194.53 | 4003.85 ±196.62 | 3946.77 ±246.12 |
-| **ConcurrentDictionary** | 699.76 ±94.36 | 589.26 ±53.70 | 654.51 ±49.36 | 590.72 ±47.79 |
-| **ImmutableList** | 244.16 ±6.78 | 234.58 ±265.78 | 151.08 ±159.87 | 171.08 ±204.33 |
-| **ImmutableHashSet** | 3981.00 ±228.55 | 3641.79 ±813.67 | 3765.74 ±842.47 | 3358.86 ±863.95 |
+| **Array** | 19.011 ±6.604 | 17.449 ±7.031 | 19.846 ±6.066 | 23.307 ±16.814 |
+| **List** | 17.640 ±5.909 | 16.384 ±4.897 | 17.604 ±7.449 | 16.558 ±16.282 |
+| **HashSet** | 128.519 ±6.828 | 144.504 ±9.909 | 149.373 ±20.784 | 145.173 ±11.903 |
+| **Dictionary** | 147.555 ±10.466 | 145.660 ±6.578 | 140.559 ±10.672 | 140.191 ±12.126 |
+| **SortedSet** | 553.327 ±35.468 | 536.900 ±31.172 | 560.540 ±32.019 | 537.760 ±37.209 |
+| **SortedDictionary** | 4389.687 ±165.970 | 3829.560 ±196.152 | 4044.800 ±198.203 | 3987.020 ±247.840 |
+| **ConcurrentDictionary** | 662.769 ±59.824 | 645.976 ±36.324 | 596.178 ±65.073 | 634.182 ±47.523 |
+| **ImmutableList** | 248.264 ±12.056 | 219.545 ±208.528 | 134.826 ±142.817 | 120.853 ±123.856 |
+| **ImmutableHashSet** | 3839.800 ±809.059 | 3733.951 ±754.649 | 3607.038 ±913.783 | 3476.127 ±1015.345 |
 
 #### Lookup Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 8.98 ±0.83 | 96.71 ±7.11 | 854.99 ±14.03 | 7745.85 ±2014.02 |
-| **List** | 9.89 ±0.50 | 97.19 ±10.01 | 869.81 ±38.74 | 6455.15 ±2250.71 |
-| **HashSet** | 0.32 ±0.09 | 1.86 ±0.12 | 19.71 ±2.57 | 122.18 ±7.40 |
-| **Dictionary** | 0.40 ±0.07 | 1.81 ±0.15 | 21.67 ±6.24 | 119.36 ±3.00 |
-| **SortedSet** | 2.95 ±0.22 | 30.03 ±3.21 | 262.58 ±13.96 | 904.04 ±55.88 |
-| **SortedDictionary** | 4.36 ±0.81 | 32.04 ±3.11 | 331.24 ±192.02 | 1120.07 ±68.75 |
-| **ConcurrentDictionary** | 0.89 ±0.43 | 2.62 ±0.10 | 60.91 ±163.83 | 174.76 ±22.24 |
-| **ImmutableList** | 594.55 ±17.11 | 4332.47 ±1460.85 | 21239.72 ±1006.84 | 198042.57 ±4948.98 |
-| **ImmutableHashSet** | 2.24 ±0.51 | 18.65 ±7.14 | 196.45 ±237.84 | 842.16 ±62.56 |
+| **Array** | 9.858 ±0.541 | 87.313 ±8.525 | 966.635 ±19.231 | 6650.230 ±2267.822 |
+| **List** | 9.942 ±0.505 | 97.424 ±10.065 | 871.642 ±38.859 | 6457.058 ±2253.309 |
+| **HashSet** | 0.330 ±0.060 | 2.021 ±0.146 | 22.027 ±4.501 | 137.847 ±5.680 |
+| **Dictionary** | 0.367 ±0.079 | 1.924 ±0.126 | 18.833 ±1.727 | 127.380 ±9.775 |
+| **SortedSet** | 2.956 ±0.224 | 30.162 ±3.233 | 264.240 ±14.057 | 910.080 ±56.158 |
+| **SortedDictionary** | 4.373 ±0.820 | 32.173 ±3.133 | 332.960 ±193.440 | 1126.340 ±69.220 |
+| **ConcurrentDictionary** | 0.649 ±0.137 | 3.075 ±0.125 | 45.893 ±124.261 | 188.513 ±20.746 |
+| **ImmutableList** | 655.020 ±12.327 | 4831.446 ±1727.661 | 23412.786 ±4543.689 | 268549.307 ±6251.209 |
+| **ImmutableHashSet** | 2.218 ±0.655 | 18.120 ±5.750 | 168.745 ±173.694 | 860.920 ±64.468 |
 
 #### Total Time Performance (μs)
 | Collection Type | 10 Lookups | 100 Lookups | 1,000 Lookups | 10,000 Lookups |
 |----------------|------------|--------------|---------------|----------------|
-| **Array** | 25.66 ±8.90 | 114.85 ±9.11 | 871.92 ±15.31 | 7767.38 ±2016.53 |
-| **List** | 27.44 ±5.94 | 113.51 ±11.33 | 887.31 ±38.91 | 6472.14 ±2258.04 |
-| **HashSet** | 144.00 ±12.21 | 140.76 ±11.83 | 154.87 ±21.39 | 252.27 ±14.47 |
-| **Dictionary** | 149.24 ±9.22 | 134.08 ±12.65 | 167.65 ±8.45 | 250.47 ±9.87 |
-| **SortedSet** | 552.56 ±35.37 | 563.34 ±32.14 | 820.26 ±38.82 | 1438.20 ±88.70 |
-| **SortedDictionary** | 4342.99 ±163.66 | 3821.83 ±196.13 | 4335.23 ±262.39 | 5067.04 ±306.56 |
-| **ConcurrentDictionary** | 700.83 ±94.79 | 591.98 ±53.78 | 715.52 ±166.90 | 765.60 ±67.83 |
-| **ImmutableList** | 838.86 ±20.71 | 4567.22 ±1574.60 | 21391.03 ±1052.32 | 198214.07 ±4928.54 |
-| **ImmutableHashSet** | 3983.41 ±228.63 | 3660.62 ±817.27 | 3962.36 ±922.61 | 4201.21 ±862.65 |
+| **Array** | 28.962 ±6.742 | 104.918 ±10.403 | 986.765 ±20.060 | 6675.025 ±2270.872 |
+| **List** | 27.673 ±5.999 | 113.962 ±11.400 | 889.339 ±39.011 | 6473.708 ±2260.456 |
+| **HashSet** | 128.946 ±6.849 | 146.645 ±9.974 | 171.520 ±21.166 | 283.129 ±15.017 |
+| **Dictionary** | 148.295 ±10.857 | 147.924 ±7.098 | 159.698 ±11.114 | 267.904 ±20.366 |
+| **SortedSet** | 556.383 ±35.580 | 567.182 ±32.435 | 824.900 ±39.006 | 1447.960 ±89.283 |
+| **SortedDictionary** | 4394.160 ±166.324 | 3861.853 ±197.732 | 4377.880 ±264.113 | 5113.460 ±308.779 |
+| **ConcurrentDictionary** | 663.540 ±59.919 | 649.187 ±36.333 | 642.185 ±138.827 | 822.787 ±61.041 |
+| **ImmutableList** | 903.402 ±20.115 | 5051.204 ±1802.655 | 23547.822 ±4568.784 | 268670.485 ±6268.557 |
+| **ImmutableHashSet** | 3842.205 ±808.860 | 3752.285 ±757.547 | 3775.958 ±960.037 | 4337.229 ±1059.249 |
 
 ## Key Performance Insights
 
 ### 🥇 Best Performers by Category
 
 #### Creation Time Champions
-- **Small collections (N≤100)**: Array and List (sub-microsecond performance)
-- **Large collections (N≥1,000)**: Array and List maintain excellent creation performance
+- **Small collections (N≤100)**: List consistently shows the best creation performance (~1 μs)
+- **Large collections (N≥1,000)**: Array and List maintain excellent creation performance (~7-20 μs)
 
 #### Lookup Time Champions
-- **Hash-based lookups**: HashSet and Dictionary show O(1) performance across all scales
-- **Sequential access**: Array and List excel for small lookup counts
-- **Sorted access**: SortedSet and SortedDictionary provide O(log n) performance
+- **Hash-based lookups**: HashSet and Dictionary show excellent O(1) performance across all scales
+- **Sequential access**: Array and List excel for small lookup counts but scale poorly for large lookups
+- **Sorted access**: SortedSet and SortedDictionary provide consistent O(log n) performance
 
 #### Total Performance Winners
-- **Small workloads**: Array and List dominate
-- **Medium workloads**: HashSet and Dictionary take the lead
-- **Large workloads**: Hash-based collections maintain superiority
+- **Small workloads**: Array and List dominate with sub-microsecond to low-microsecond performance
+- **Medium workloads**: HashSet and Dictionary take the lead with consistent hash-based performance
+- **Large workloads**: Hash-based collections maintain clear superiority
 
 ### 📊 Performance Patterns
 
-1. **Scalability**: Hash-based collections (HashSet, Dictionary) show excellent scalability
-2. **Consistency**: Array and List provide very consistent performance with low variance
-3. **Thread Safety Cost**: ConcurrentDictionary shows ~2-3x overhead compared to Dictionary
-4. **Immutability Cost**: Immutable collections show significant performance penalties, especially for large datasets
-5. **Sorted Structure Cost**: SortedSet and SortedDictionary have higher overhead but provide ordering guarantees
+1. **Scalability**: Hash-based collections (HashSet, Dictionary) show excellent scalability with consistent O(1) lookup performance
+2. **Consistency**: Array and List provide very consistent performance with low variance for creation operations
+3. **Thread Safety Cost**: ConcurrentDictionary shows ~2-3x overhead compared to Dictionary but maintains good scalability
+4. **Immutability Cost**: Immutable collections show significant performance penalties, especially ImmutableList for large datasets (200,000+ μs for N=10,000, 10,000 lookups)
+5. **Reliability**: The enhanced benchmark methodology with forced GC and increased samples provides much more consistent and reliable results
 
-### ⚠️ Performance Warnings
+### 💡 Recommendations
 
-- **ImmutableList**: Shows exponential degradation with size, unsuitable for large collections
-- **Large sorted collections**: SortedDictionary creation time becomes prohibitive at N=10,000
-- **High lookup counts**: Sequential collections (Array, List) become inefficient for many lookups
-
----
-
-*Statistics format: Mean ±Standard Deviation (all times in microseconds)*
-*Outliers removed using Z-score > 2.0 threshold*
+- **Use Array/List** for small collections with infrequent lookups
+- **Use HashSet/Dictionary** for frequent lookups regardless of collection size
+- **Avoid ImmutableList** for performance-critical scenarios with large datasets
+- **Consider ConcurrentDictionary** only when thread safety is required and the ~2-3x overhead is acceptable

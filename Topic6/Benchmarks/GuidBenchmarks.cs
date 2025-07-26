@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -14,7 +14,7 @@ namespace Benchmarks
 {
     [SimpleJob(RunStrategy.Monitoring, warmupCount: 3, iterationCount: 30)]
     [MemoryDiagnoser]
-    public class ParallelizedIntegerBenchmarks
+    public class GuidBenchmarks
     {
         [Params(10, 100, 1000, 10000)]
         public int N { get; set; }
@@ -22,22 +22,50 @@ namespace Benchmarks
         [Params(10, 100, 1000, 10000)]
         public int LookupCount { get; set; }
 
-        private int[] intSourceData = null!;
-        private int[] intLookupItems = null!;
+        private Guid[] guidSourceData = null!;
+        private Guid[] guidLookupItems = null!;
         private static readonly object _fileLock = new object();
 
         [GlobalSetup]
         public void Setup()
         {
-            var random = new Random(42);
-            intSourceData = Enumerable.Range(1, N).Select(i => random.Next()).Distinct().Take(N).ToArray();
-            intLookupItems = Enumerable.Range(1, LookupCount).Select(i => random.Next()).ToArray();
+            // Generate N unique GUIDs for the collection
+            guidSourceData = new Guid[N];
+            for (int i = 0; i < N; i++)
+            {
+                guidSourceData[i] = Guid.NewGuid();
+            }
+
+            // Generate lookup items (mix of existing and non-existing GUIDs)
+            guidLookupItems = new Guid[LookupCount];
+            var random = new Random(42); // Fixed seed for reproducibility
+
+            for (int i = 0; i < LookupCount; i++)
+            {
+                if (i < N && random.NextDouble() < 0.7) // 70% chance to use existing GUID
+                {
+                    guidLookupItems[i] = guidSourceData[random.Next(N)];
+                }
+                else // 30% chance to use non-existing GUID
+                {
+                    guidLookupItems[i] = Guid.NewGuid();
+                }
+            }
+        }
+
+        [IterationCleanup]
+        public void IterationCleanup()
+        {
+            // Force garbage collection between iterations to prevent memory pressure interference
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         private void LogDetailedResults(string collectionType, int n, int lookupCount, TimeSpan creationTime, TimeSpan lookupTime, TimeSpan totalTime)
         {
             // Use a hardcoded absolute path to ensure we can find it
-            var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results.txt";
+            var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results_guid.txt";
             
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
@@ -63,7 +91,7 @@ namespace Benchmarks
                 catch (Exception ex)
                 {
                     // If there's an issue, write to a backup location we can debug
-                    var backupPath = @"C:\temp\benchmark_debug.txt";
+                    var backupPath = @"C:\temp\benchmark_debug_guid.txt";
                     Directory.CreateDirectory(Path.GetDirectoryName(backupPath));
                     File.AppendAllText(backupPath, $"ERROR: {ex.Message}\n");
                 }
@@ -71,183 +99,209 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double IntList_ParallelParams()
+        public double GuidArray()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new List<int>(intSourceData);
+            var collection = guidSourceData.ToArray();
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
-                _ = collection.Contains(item);
+            foreach (var item in guidLookupItems)
+                _ = Array.IndexOf(collection, item) >= 0;
             lookupSw.Stop();
             
             totalSw.Stop();
             
-            LogDetailedResults("List", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            // Clear reference to help GC
+            collection = null;
             
+            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
 
         [Benchmark]
-        public double IntHashSet_ParallelParams()
+        public double GuidList()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new HashSet<int>(intSourceData);
+            var collection = new List<Guid>(guidSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
+            foreach (var item in guidLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
             totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
+            
+            LogDetailedResults("List", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            return totalSw.Elapsed.TotalMicroseconds;
+        }
+
+        [Benchmark]
+        public double GuidHashSet()
+        {
+            var totalSw = Stopwatch.StartNew();
+            
+            var creationSw = Stopwatch.StartNew();
+            var collection = new HashSet<Guid>(guidSourceData);
+            creationSw.Stop();
+            
+            var lookupSw = Stopwatch.StartNew();
+            foreach (var item in guidLookupItems)
+                _ = collection.Contains(item);
+            lookupSw.Stop();
+            
+            totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
             
             LogDetailedResults("HashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
 
         [Benchmark]
-        public double IntSortedSet_ParallelParams()
+        public double GuidSortedSet()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new SortedSet<int>(intSourceData);
+            var collection = new SortedSet<Guid>(guidSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
+            foreach (var item in guidLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
             totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
             
             LogDetailedResults("SortedSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
 
         [Benchmark]
-        public double IntDictionary_ParallelParams()
+        public double GuidDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = intSourceData.ToDictionary(x => x, x => true);
+            var collection = guidSourceData.ToDictionary(x => x, x => true);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
+            foreach (var item in guidLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
             totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
             
             LogDetailedResults("Dictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
 
         [Benchmark]
-        public double IntSortedDictionary_ParallelParams()
+        public double GuidSortedDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new SortedDictionary<int, bool>(intSourceData.ToDictionary(x => x, x => true));
+            var collection = new SortedDictionary<Guid, bool>(guidSourceData.ToDictionary(x => x, x => true));
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
+            foreach (var item in guidLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
             totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
             
             LogDetailedResults("SortedDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
 
         [Benchmark]
-        public double IntConcurrentDictionary_ParallelParams()
+        public double GuidConcurrentDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new ConcurrentDictionary<int, bool>(intSourceData.ToDictionary(x => x, x => true));
+            var collection = new ConcurrentDictionary<Guid, bool>(guidSourceData.ToDictionary(x => x, x => true));
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
+            foreach (var item in guidLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
             totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
             
             LogDetailedResults("ConcurrentDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
 
         [Benchmark]
-        public double IntImmutableList_ParallelParams()
+        public double GuidImmutableList()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = ImmutableList.CreateRange(intSourceData);
+            var collection = ImmutableList.CreateRange(guidSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
+            foreach (var item in guidLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
             totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
             
             LogDetailedResults("ImmutableList", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
 
         [Benchmark]
-        public double IntImmutableHashSet_ParallelParams()
+        public double GuidImmutableHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = ImmutableHashSet.CreateRange(intSourceData);
+            var collection = ImmutableHashSet.CreateRange(guidSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
+            foreach (var item in guidLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
             totalSw.Stop();
             
+            // Clear reference to help GC
+            collection = null;
+            
             LogDetailedResults("ImmutableHashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
-        }
-
-        [Benchmark]
-        public double IntArray_ParallelParams()
-        {
-            var totalSw = Stopwatch.StartNew();
-            
-            var creationSw = Stopwatch.StartNew();
-            var collection = intSourceData.ToArray();
-            creationSw.Stop();
-            
-            var lookupSw = Stopwatch.StartNew();
-            foreach (var item in intLookupItems)
-                _ = Array.IndexOf(collection, item) >= 0;
-            lookupSw.Stop();
-            
-            totalSw.Stop();
-            
-            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
     }

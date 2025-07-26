@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -14,7 +14,7 @@ namespace Benchmarks
 {
     [SimpleJob(RunStrategy.Monitoring, warmupCount: 5, iterationCount: 50)]
     [MemoryDiagnoser]
-    public class ParallelizedGuidBenchmarks
+    public class StringBenchmarks
     {
         [Params(10, 100, 1000, 10000)]
         public int N { get; set; }
@@ -22,50 +22,38 @@ namespace Benchmarks
         [Params(10, 100, 1000, 10000)]
         public int LookupCount { get; set; }
 
-        private Guid[] guidSourceData = null!;
-        private Guid[] guidLookupItems = null!;
+        private string[] stringSourceData = null!;
+        private string[] stringLookupItems = null!;
         private static readonly object _fileLock = new object();
 
         [GlobalSetup]
         public void Setup()
         {
-            // Generate N unique GUIDs for the collection
-            guidSourceData = new Guid[N];
-            for (int i = 0; i < N; i++)
-            {
-                guidSourceData[i] = Guid.NewGuid();
-            }
-
-            // Generate lookup items (mix of existing and non-existing GUIDs)
-            guidLookupItems = new Guid[LookupCount];
-            var random = new Random(42); // Fixed seed for reproducibility
-
-            for (int i = 0; i < LookupCount; i++)
-            {
-                if (i < N && random.NextDouble() < 0.7) // 70% chance to use existing GUID
-                {
-                    guidLookupItems[i] = guidSourceData[random.Next(N)];
-                }
-                else // 30% chance to use non-existing GUID
-                {
-                    guidLookupItems[i] = Guid.NewGuid();
-                }
-            }
+            var random = new Random(42);
+            
+            // Generate random strings of varying lengths (5-15 characters)
+            stringSourceData = Enumerable.Range(1, N)
+                .Select(i => GenerateRandomString(random, random.Next(5, 16)))
+                .Distinct()
+                .Take(N)
+                .ToArray();
+                
+            stringLookupItems = Enumerable.Range(1, LookupCount)
+                .Select(i => GenerateRandomString(random, random.Next(5, 16)))
+                .ToArray();
         }
 
-        [IterationCleanup]
-        public void IterationCleanup()
+        private string GenerateRandomString(Random random, int length)
         {
-            // Force garbage collection between iterations to prevent memory pressure interference
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         private void LogDetailedResults(string collectionType, int n, int lookupCount, TimeSpan creationTime, TimeSpan lookupTime, TimeSpan totalTime)
         {
             // Use a hardcoded absolute path to ensure we can find it
-            var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results_guid.txt";
+            var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results_string.txt";
             
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
@@ -91,47 +79,33 @@ namespace Benchmarks
                 catch (Exception ex)
                 {
                     // If there's an issue, write to a backup location we can debug
-                    var backupPath = @"C:\temp\benchmark_debug_guid.txt";
+                    var backupPath = @"C:\temp\benchmark_debug_string.txt";
                     Directory.CreateDirectory(Path.GetDirectoryName(backupPath));
                     File.AppendAllText(backupPath, $"ERROR: {ex.Message}\n");
                 }
             }
         }
 
-        [Benchmark]
-        public double GuidArray_ParallelParams()
+        [IterationCleanup]
+        public void IterationCleanup()
         {
-            var totalSw = Stopwatch.StartNew();
-            
-            var creationSw = Stopwatch.StartNew();
-            var collection = guidSourceData.ToArray();
-            creationSw.Stop();
-            
-            var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
-                _ = Array.IndexOf(collection, item) >= 0;
-            lookupSw.Stop();
-            
-            totalSw.Stop();
-            
-            // Clear reference to help GC
-            collection = null;
-            
-            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
+            // Force garbage collection between iterations to prevent memory pressure interference
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         [Benchmark]
-        public double GuidList_ParallelParams()
+        public double StringList()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new List<Guid>(guidSourceData);
+            var collection = new List<string>(stringSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
@@ -145,16 +119,16 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double GuidHashSet_ParallelParams()
+        public double StringHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new HashSet<Guid>(guidSourceData);
+            var collection = new HashSet<string>(stringSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
@@ -168,16 +142,16 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double GuidSortedSet_ParallelParams()
+        public double StringSortedSet()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new SortedSet<Guid>(guidSourceData);
+            var collection = new SortedSet<string>(stringSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
@@ -191,16 +165,16 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double GuidDictionary_ParallelParams()
+        public double StringDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = guidSourceData.ToDictionary(x => x, x => true);
+            var collection = stringSourceData.ToDictionary(x => x, x => true);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
@@ -214,16 +188,16 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double GuidSortedDictionary_ParallelParams()
+        public double StringSortedDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new SortedDictionary<Guid, bool>(guidSourceData.ToDictionary(x => x, x => true));
+            var collection = new SortedDictionary<string, bool>(stringSourceData.ToDictionary(x => x, x => true));
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
@@ -237,16 +211,16 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double GuidConcurrentDictionary_ParallelParams()
+        public double StringConcurrentDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = new ConcurrentDictionary<Guid, bool>(guidSourceData.ToDictionary(x => x, x => true));
+            var collection = new ConcurrentDictionary<string, bool>(stringSourceData.ToDictionary(x => x, x => true));
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
@@ -260,16 +234,16 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double GuidImmutableList_ParallelParams()
+        public double StringImmutableList()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = ImmutableList.CreateRange(guidSourceData);
+            var collection = ImmutableList.CreateRange(stringSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
@@ -283,16 +257,16 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public double GuidImmutableHashSet_ParallelParams()
+        public double StringImmutableHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
             var creationSw = Stopwatch.StartNew();
-            var collection = ImmutableHashSet.CreateRange(guidSourceData);
+            var collection = ImmutableHashSet.CreateRange(stringSourceData);
             creationSw.Stop();
             
             var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
+            foreach (var item in stringLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
@@ -302,6 +276,29 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ImmutableHashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            return totalSw.Elapsed.TotalMicroseconds;
+        }
+
+        [Benchmark]
+        public double StringArray()
+        {
+            var totalSw = Stopwatch.StartNew();
+            
+            var creationSw = Stopwatch.StartNew();
+            var collection = stringSourceData.ToArray();
+            creationSw.Stop();
+            
+            var lookupSw = Stopwatch.StartNew();
+            foreach (var item in stringLookupItems)
+                _ = Array.IndexOf(collection, item) >= 0;
+            lookupSw.Stop();
+            
+            totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
+            
+            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
             return totalSw.Elapsed.TotalMicroseconds;
         }
     }

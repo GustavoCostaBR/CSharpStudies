@@ -29,6 +29,9 @@ namespace Benchmarks
                 case "analyze":
                 case "analysis":
                 case "a":
+                case "summary":
+                case "sum":
+                case "s":
                     var analyzeDataType = args.Length > 1 ? args[1].ToLower() : "int";
                     RunStatisticalAnalysis(analyzeDataType);
                     break;
@@ -55,21 +58,26 @@ namespace Benchmarks
             Console.WriteLine("Commands:");
             Console.WriteLine("  benchmark, bench, b    - Run performance benchmarks (30 iterations each)");
             Console.WriteLine("  analyze, analysis, a   - Analyze existing results with statistics");
+            Console.WriteLine("  summary, sum, s        - Same as analyze (alias)");
             Console.WriteLine("  help, h, ?            - Show this help message");
             Console.WriteLine();
             Console.WriteLine("Data Types:");
-            Console.WriteLine("  int, integer          - Integer benchmarks (default)");
+            Console.WriteLine("  int, integer          - Integer benchmarks");
             Console.WriteLine("  string, str           - String benchmarks");
-            Console.WriteLine("  all                   - All data types (benchmark only)");
+            Console.WriteLine("  guid                  - GUID benchmarks");
+            Console.WriteLine("  all                   - All data types");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  dotnet run -c Release benchmark int       # Run integer benchmarks");
             Console.WriteLine("  dotnet run -c Release benchmark string     # Run string benchmarks");
+            Console.WriteLine("  dotnet run -c Release benchmark guid       # Run GUID benchmarks");
             Console.WriteLine("  dotnet run -c Release benchmark all        # Run all benchmarks");
             Console.WriteLine("  dotnet run -c Release analyze int          # Analyze integer results");
             Console.WriteLine("  dotnet run -c Release analyze string       # Analyze string results");
-            Console.WriteLine("  dotnet run -c Release b int                # Short form");
-            Console.WriteLine("  dotnet run -c Release a string             # Short form");
+            Console.WriteLine("  dotnet run -c Release analyze guid         # Analyze GUID results");
+            Console.WriteLine("  dotnet run -c Release summary guid         # Same as analyze guid");
+            Console.WriteLine("  dotnet run -c Release b guid               # Short form benchmark");
+            Console.WriteLine("  dotnet run -c Release s guid               # Short form summary/analyze");
         }
 
         private static void RunBenchmarks(string dataType)
@@ -93,18 +101,25 @@ namespace Benchmarks
                     Console.WriteLine("Running STRING benchmarks...");
                     BenchmarkRunner.Run<ParallelizedStringBenchmarks>();
                     break;
+
+                case "guid":
+                    Console.WriteLine("Running GUID benchmarks...");
+                    BenchmarkRunner.Run<ParallelizedGuidBenchmarks>();
+                    break;
                     
                 case "all":
                     Console.WriteLine("Running ALL benchmark types...");
-                    Console.WriteLine("\n1/2 Running INTEGER benchmarks...");
+                    Console.WriteLine("\n1/3 Running INTEGER benchmarks...");
                     BenchmarkRunner.Run<ParallelizedIntegerBenchmarks>();
-                    Console.WriteLine("\n2/2 Running STRING benchmarks...");
+                    Console.WriteLine("\n2/3 Running STRING benchmarks...");
                     BenchmarkRunner.Run<ParallelizedStringBenchmarks>();
+                    Console.WriteLine("\n3/3 Running GUID benchmarks...");
+                    BenchmarkRunner.Run<ParallelizedGuidBenchmarks>();
                     break;
                     
                 default:
                     Console.WriteLine($"Unknown data type: {dataType}");
-                    Console.WriteLine("Available types: int, string, all");
+                    Console.WriteLine("Available types: int, string, guid, all");
                     ShowHelp();
                     break;
             }
@@ -126,6 +141,13 @@ namespace Benchmarks
                     summaryFileName = "statistical_summary_string.csv";
                     reportFileName = "performance_report_string.md";
                     Console.WriteLine("Analyzing STRING benchmark results...");
+                    break;
+
+                case "guid":
+                    resultsFileName = "detailed_results_guid.txt";
+                    summaryFileName = "statistical_summary_guid.csv";
+                    reportFileName = "performance_report_guid.md";
+                    Console.WriteLine("Analyzing GUID benchmark results...");
                     break;
                     
                 case "int":

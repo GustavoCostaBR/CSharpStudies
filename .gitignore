@@ -335,3 +335,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Copilot diff state
+copilotDiffState.xml

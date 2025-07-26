@@ -15,6 +15,7 @@ namespace Benchmarks
             public double CreationTime { get; set; }
             public double LookupTime { get; set; }
             public double TotalTime { get; set; }
+            public double OverheadTime { get; set; }
         }
 
         public class StatisticalSummary
@@ -45,6 +46,13 @@ namespace Benchmarks
             public double TotalMin { get; set; }
             public double TotalMax { get; set; }
             public double TotalMedian { get; set; }
+            
+            // Overhead Time Stats
+            public double OverheadMean { get; set; }
+            public double OverheadStdDev { get; set; }
+            public double OverheadMin { get; set; }
+            public double OverheadMax { get; set; }
+            public double OverheadMedian { get; set; }
         }
 
         public List<BenchmarkResult> ReadResults(string filePath)
@@ -75,7 +83,7 @@ namespace Benchmarks
                     var parts = line.Split(',');
                     if (parts.Length >= 6)
                     {
-                        results.Add(new BenchmarkResult
+                        var result = new BenchmarkResult
                         {
                             CollectionType = parts[0].Trim(),
                             N = int.Parse(parts[1]),
@@ -83,7 +91,20 @@ namespace Benchmarks
                             CreationTime = double.Parse(parts[3]),
                             LookupTime = double.Parse(parts[4]),
                             TotalTime = double.Parse(parts[5])
-                        });
+                        };
+
+                        // Handle OverheadTime if available (new format)
+                        if (parts.Length >= 7)
+                        {
+                            result.OverheadTime = double.Parse(parts[6]);
+                        }
+                        else
+                        {
+                            // Calculate overhead for older data without this column
+                            result.OverheadTime = result.TotalTime - (result.CreationTime + result.LookupTime);
+                        }
+
+                        results.Add(result);
                     }
                 }
                 catch (Exception ex)
@@ -146,6 +167,14 @@ namespace Benchmarks
                 summary.TotalMin = totalTimes.Min();
                 summary.TotalMax = totalTimes.Max();
                 summary.TotalMedian = CalculateMedian(totalTimes);
+
+                // Calculate statistics for Overhead Time
+                var overheadTimes = cleanedSamples.Select(s => s.OverheadTime).ToList();
+                summary.OverheadMean = overheadTimes.Average();
+                summary.OverheadStdDev = CalculateStandardDeviation(overheadTimes);
+                summary.OverheadMin = overheadTimes.Min();
+                summary.OverheadMax = overheadTimes.Max();
+                summary.OverheadMedian = CalculateMedian(overheadTimes);
 
                 summaries.Add(summary);
             }
@@ -210,7 +239,8 @@ namespace Benchmarks
             writer.WriteLine("CollectionType,N,LookupCount,SampleCount,OutliersRemoved," +
                            "CreationMean,CreationStdDev,CreationMin,CreationMax,CreationMedian," +
                            "LookupMean,LookupStdDev,LookupMin,LookupMax,LookupMedian," +
-                           "TotalMean,TotalStdDev,TotalMin,TotalMax,TotalMedian");
+                           "TotalMean,TotalStdDev,TotalMin,TotalMax,TotalMedian," +
+                           "OverheadMean,OverheadStdDev,OverheadMin,OverheadMax,OverheadMedian");
 
             // Write data
             foreach (var summary in summaries.OrderBy(s => s.CollectionType)
@@ -221,7 +251,8 @@ namespace Benchmarks
                                $"{summary.SampleCount},{summary.OutliersRemoved}," +
                                $"{summary.CreationMean:F3},{summary.CreationStdDev:F3},{summary.CreationMin:F3},{summary.CreationMax:F3},{summary.CreationMedian:F3}," +
                                $"{summary.LookupMean:F3},{summary.LookupStdDev:F3},{summary.LookupMin:F3},{summary.LookupMax:F3},{summary.LookupMedian:F3}," +
-                               $"{summary.TotalMean:F3},{summary.TotalStdDev:F3},{summary.TotalMin:F3},{summary.TotalMax:F3},{summary.TotalMedian:F3}");
+                               $"{summary.TotalMean:F3},{summary.TotalStdDev:F3},{summary.TotalMin:F3},{summary.TotalMax:F3},{summary.TotalMedian:F3}," +
+                               $"{summary.OverheadMean:F3},{summary.OverheadStdDev:F3},{summary.OverheadMin:F3},{summary.OverheadMax:F3},{summary.OverheadMedian:F3}");
             }
 
             Console.WriteLine($"Statistical summary written to: {outputPath}");

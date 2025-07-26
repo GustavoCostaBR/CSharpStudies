@@ -85,17 +85,13 @@ namespace Benchmarks
             {
                 var currentProcess = Process.GetCurrentProcess();
                 
-                // Set highest priority for consistent timing
-                currentProcess.PriorityClass = ProcessPriorityClass.High;
-                
-                // Set processor affinity to use only the first CPU core
-                // This ensures all benchmarks run on the same core for consistency
-                currentProcess.ProcessorAffinity = (IntPtr)1;
+                // Set real-time priority for maximum consistency
+                currentProcess.PriorityClass = ProcessPriorityClass.RealTime;
                 
                 Console.WriteLine("✓ Process configured for benchmarking:");
                 Console.WriteLine($"  - Priority: {currentProcess.PriorityClass}");
-                Console.WriteLine($"  - Processor Affinity: Core 0 only");
                 Console.WriteLine($"  - Process ID: {currentProcess.Id}");
+                Console.WriteLine($"  - Processor affinity: All cores (natural scheduling)");
                 Console.WriteLine();
             }
             catch (Exception ex)
@@ -126,6 +122,9 @@ namespace Benchmarks
                 return; // Skip logging during warmup
             }
 
+            // Calculate processor overhead (time spent on other activities)
+            var overheadTime = totalTime - (creationTime + lookupTime);
+
             // Use a hardcoded absolute path to ensure we can find it
             var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results_integer.txt";
             
@@ -143,9 +142,9 @@ namespace Benchmarks
                     if (needsHeader)
                     {
                         // Write header if file doesn't exist or is empty
-                        writer.WriteLine("CollectionType,N,LookupCount,CreationTime_μs,LookupTime_μs,TotalTime_μs");
+                        writer.WriteLine("CollectionType,N,LookupCount,CreationTime_μs,LookupTime_μs,TotalTime_μs,OverheadTime_μs");
                     }
-                    writer.WriteLine($"{collectionType},{n},{lookupCount},{creationTime.TotalMicroseconds:F2},{lookupTime.TotalMicroseconds:F2},{totalTime.TotalMicroseconds:F2}");
+                    writer.WriteLine($"{collectionType},{n},{lookupCount},{creationTime.TotalMicroseconds:F2},{lookupTime.TotalMicroseconds:F2},{totalTime.TotalMicroseconds:F2},{overheadTime.TotalMicroseconds:F2}");
                     
                     // Force write to disk
                     writer.Flush();

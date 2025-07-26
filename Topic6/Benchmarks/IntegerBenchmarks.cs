@@ -6,86 +6,102 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Engines;
 
 namespace Benchmarks
 {
+    [SimpleJob(RunStrategy.Monitoring, warmupCount: IntegerBenchmarks.WarmupIterations, iterationCount: IntegerBenchmarks.ActualIterations)]
+    [MemoryDiagnoser]
     public class IntegerBenchmarks
     {
         // Benchmark iteration constants
         public const int WarmupIterations = 5;
         public const int ActualIterations = 50;
 
-        private int N { get; set; }
-        private int LookupCount { get; set; }
+        [Params(10, 100, 1000, 10000)]
+        public int N { get; set; }
+
+        [Params(10, 100, 1000, 10000)]
+        public int LookupCount { get; set; }
 
         private int[] intSourceData = null!;
         private int[] intLookupItems = null!;
         private static readonly object _fileLock = new object();
         private int _iterationCount = 0;
+        private Process _currentProcess = null!;
+        private ProcessorAffinity _originalAffinity;
+        private ThreadPriority _originalPriority;
 
-        public void RunManual()
+        private struct ProcessorAffinity
         {
-            var nValues = new[] { 10, 100, 1000, 10000 };
-            var lookupValues = new[] { 10, 100, 1000, 10000 };
-
-            foreach (var n in nValues)
-            {
-                foreach (var lookupCount in lookupValues)
-                {
-                    N = n;
-                    LookupCount = lookupCount;
-                    
-                    Console.WriteLine($"\nRunning for N={N}, LookupCount={LookupCount}");
-                    
-                    Setup();
-                    
-                    _iterationCount = 0;
-                    
-                    for (int i = 0; i < WarmupIterations + ActualIterations; i++)
-                    {
-                        IterationSetup();
-                        
-                        IntList();
-                        IterationCleanup();
-                        
-                        IntHashSet();
-                        IterationCleanup();
-                        
-                        IntSortedSet();
-                        IterationCleanup();
-                        
-                        IntDictionary();
-                        IterationCleanup();
-                        
-                        IntSortedDictionary();
-                        IterationCleanup();
-                        
-                        IntConcurrentDictionary();
-                        IterationCleanup();
-                        
-                        IntImmutableList();
-                        IterationCleanup();
-                        
-                        IntImmutableHashSet();
-                        IterationCleanup();
-                        
-                        IntArray();
-                        IterationCleanup();
-                    }
-                }
-            }
+            public IntPtr Mask;
+            public ProcessPriorityClass Priority;
         }
 
+        [GlobalSetup]
         public void Setup()
         {
+            // Set processor affinity to isolate to a single core to reduce variance
+            _currentProcess = Process.GetCurrentProcess();
+            _originalAffinity = new ProcessorAffinity
+            {
+                Mask = _currentProcess.ProcessorAffinity,
+                Priority = _currentProcess.PriorityClass
+            };
+
+            try
+            {
+                // Try to isolate to the first available processor core
+                _currentProcess.ProcessorAffinity = new IntPtr(1);
+                _currentProcess.PriorityClass = ProcessPriorityClass.High;
+                
+                // Set thread priority for better isolation
+                _originalPriority = Thread.CurrentThread.Priority;
+                Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            }
+            catch (Exception ex)
+            {
+                // If we can't set affinity (permissions), continue without it
+                Console.WriteLine($"Warning: Could not set processor affinity: {ex.Message}");
+            }
+
             var random = new Random(42);
             intSourceData = Enumerable.Range(1, N).Select(i => random.Next()).Distinct().Take(N).ToArray();
             intLookupItems = Enumerable.Range(1, LookupCount).Select(i => random.Next()).ToArray();
         }
 
+        [GlobalCleanup]
+        public void Cleanup()
+        {
+            try
+            {
+                // Restore original processor affinity and priority
+                _currentProcess.ProcessorAffinity = _originalAffinity.Mask;
+                _currentProcess.PriorityClass = _originalAffinity.Priority;
+                Thread.CurrentThread.Priority = _originalPriority;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Could not restore processor affinity: {ex.Message}");
+            }
+        }
+
+        [IterationSetup]
         public void IterationSetup()
         {
             _iterationCount++;
+            
+            // Force garbage collection and wait for finalizers to complete
+            // This reduces GC interference during measurements
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            
+            // Small delay to let system settle
+            Thread.Sleep(1);
         }
 
         private void LogDetailedResults(string collectionType, int n, int lookupCount, TimeSpan creationTime, TimeSpan lookupTime, TimeSpan totalTime)
@@ -130,6 +146,7 @@ namespace Benchmarks
             }
         }
 
+        [IterationCleanup]
         public void IterationCleanup()
         {
             // Force garbage collection between iterations to prevent memory pressure interference
@@ -138,193 +155,239 @@ namespace Benchmarks
             GC.Collect();
         }
 
-        public void IntList()
+        // THEORY: Why Creation Time Varies with Lookup Count
+        // =================================================
+        // 1. **Memory Layout Preparation**: The JIT compiler may optimize memory layout 
+        //    differently based on how the collection will be used (more lookups = different optimization)
+        // 2. **CPU Cache State**: Previous benchmark iterations affect CPU cache state, 
+        //    influencing memory allocation patterns
+        // 3. **Garbage Collection Pressure**: Different lookup counts create different GC pressure,
+        //    affecting when GC runs during creation phase
+        // 4. **Memory Fragmentation**: Heap fragmentation from previous iterations affects 
+        //    allocation patterns for new collections
+        // 5. **Branch Prediction**: CPU branch predictor state varies based on previous operations
+        // 6. **Memory Pre-allocation**: Some collections may pre-allocate based on expected usage patterns
+
+        [Benchmark]
+        public double IntList()
         {
-            var totalSw = Stopwatch.StartNew();
+            // Pre-warm CPU caches and branch predictor with a tiny operation
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = new List<int>(intSourceData);
             creationSw.Stop();
             
+            // Memory barrier AFTER stopping creation timer to ensure proper ordering
+            // without affecting the measurement
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            // Calculate total time as sum of measured components for consistency
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
             // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("List", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("List", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntHashSet()
+        [Benchmark]
+        public double IntHashSet()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = new HashSet<int>(intSourceData);
             creationSw.Stop();
             
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("HashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("HashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntSortedSet()
+        [Benchmark]
+        public double IntSortedSet()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = new SortedSet<int>(intSourceData);
             creationSw.Stop();
             
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("SortedSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("SortedSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntDictionary()
+        [Benchmark]
+        public double IntDictionary()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = intSourceData.ToDictionary(x => x, x => true);
             creationSw.Stop();
             
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("Dictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("Dictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntSortedDictionary()
+        [Benchmark]
+        public double IntSortedDictionary()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = new SortedDictionary<int, bool>(intSourceData.ToDictionary(x => x, x => true));
             creationSw.Stop();
             
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("SortedDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("SortedDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntConcurrentDictionary()
+        [Benchmark]
+        public double IntConcurrentDictionary()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = new ConcurrentDictionary<int, bool>(intSourceData.ToDictionary(x => x, x => true));
             creationSw.Stop();
             
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.ContainsKey(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("ConcurrentDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("ConcurrentDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntImmutableList()
+        [Benchmark]
+        public double IntImmutableList()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = ImmutableList.CreateRange(intSourceData);
             creationSw.Stop();
             
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("ImmutableList", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("ImmutableList", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntImmutableHashSet()
+        [Benchmark]
+        public double IntImmutableHashSet()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = ImmutableHashSet.CreateRange(intSourceData);
             creationSw.Stop();
             
+            Thread.MemoryBarrier();
+            
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = collection.Contains(item);
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("ImmutableHashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("ImmutableHashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
 
-        public void IntArray()
+        [Benchmark]
+        public double IntArray()
         {
-            var totalSw = Stopwatch.StartNew();
+            var dummy = intSourceData[0];
             
             var creationSw = Stopwatch.StartNew();
             var collection = intSourceData.ToArray();
             creationSw.Stop();
+            
+            Thread.MemoryBarrier();
             
             var lookupSw = Stopwatch.StartNew();
             foreach (var item in intLookupItems)
                 _ = Array.IndexOf(collection, item) >= 0;
             lookupSw.Stop();
             
-            totalSw.Stop();
+            var totalTime = creationSw.Elapsed + lookupSw.Elapsed;
             
-            // Clear reference to help GC
             collection = null;
             
-            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
+            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalTime);
+            return totalTime.TotalMicroseconds;
         }
     }
 }

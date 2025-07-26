@@ -25,6 +25,9 @@ namespace Benchmarks
 
         public void RunManual()
         {
+            // Configure process for maximum consistency
+            ConfigureProcessForBenchmarking();
+            
             var nValues = new[] { 10, 100, 1000, 10000 };
             var lookupValues = new[] { 10, 100, 1000, 10000 };
 
@@ -73,6 +76,33 @@ namespace Benchmarks
                         IterationCleanup();
                     }
                 }
+            }
+        }
+
+        private void ConfigureProcessForBenchmarking()
+        {
+            try
+            {
+                var currentProcess = Process.GetCurrentProcess();
+                
+                // Set highest priority for consistent timing
+                currentProcess.PriorityClass = ProcessPriorityClass.High;
+                
+                // Set processor affinity to use only the first CPU core
+                // This ensures all benchmarks run on the same core for consistency
+                currentProcess.ProcessorAffinity = (IntPtr)1;
+                
+                Console.WriteLine("✓ Process configured for benchmarking:");
+                Console.WriteLine($"  - Priority: {currentProcess.PriorityClass}");
+                Console.WriteLine($"  - Processor Affinity: Core 0 only");
+                Console.WriteLine($"  - Process ID: {currentProcess.Id}");
+                Console.WriteLine();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Warning: Could not configure process settings: {ex.Message}");
+                Console.WriteLine("Benchmarks will continue but may have more variance.");
+                Console.WriteLine();
             }
         }
 

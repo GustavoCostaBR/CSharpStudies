@@ -6,32 +6,106 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Engines;
 
 namespace Benchmarks
 {
-    [SimpleJob(RunStrategy.Monitoring, warmupCount: StringBenchmarks.WarmupIterations, iterationCount: StringBenchmarks.ActualIterations)]
-    [MemoryDiagnoser]
     public class StringBenchmarks
     {
         // Benchmark iteration constants
         public const int WarmupIterations = 5;
         public const int ActualIterations = 50;
 
-        [Params(10, 100, 1000, 10000)]
-        public int N { get; set; }
-
-        [Params(10, 100, 1000, 10000)]
-        public int LookupCount { get; set; }
+        private int N { get; set; }
+        private int LookupCount { get; set; }
 
         private string[] stringSourceData = null!;
         private string[] stringLookupItems = null!;
         private static readonly object _fileLock = new object();
         private int _iterationCount = 0;
 
-        [GlobalSetup]
+        public void RunManual()
+        {
+            // Configure process for maximum consistency
+            ConfigureProcessForBenchmarking();
+            
+            var nValues = new[] { 10, 100, 1000, 10000 };
+            var lookupValues = new[] { 10, 100, 1000, 10000 };
+
+            foreach (var n in nValues)
+            {
+                foreach (var lookupCount in lookupValues)
+                {
+                    N = n;
+                    LookupCount = lookupCount;
+                    
+                    Console.WriteLine($"\nRunning for N={N}, LookupCount={LookupCount}");
+                    
+                    Setup();
+                    
+                    _iterationCount = 0;
+                    
+                    for (int i = 0; i < WarmupIterations + ActualIterations; i++)
+                    {
+                        IterationSetup();
+                        
+                        StringList();
+                        IterationCleanup();
+                        
+                        StringHashSet();
+                        IterationCleanup();
+                        
+                        StringSortedSet();
+                        IterationCleanup();
+                        
+                        StringDictionary();
+                        IterationCleanup();
+                        
+                        StringSortedDictionary();
+                        IterationCleanup();
+                        
+                        StringConcurrentDictionary();
+                        IterationCleanup();
+                        
+                        StringImmutableList();
+                        IterationCleanup();
+                        
+                        StringImmutableHashSet();
+                        IterationCleanup();
+                        
+                        StringArray();
+                        IterationCleanup();
+                    }
+                }
+            }
+        }
+
+        private void ConfigureProcessForBenchmarking()
+        {
+            try
+            {
+                var currentProcess = Process.GetCurrentProcess();
+                
+                // Set highest priority for consistent timing
+                currentProcess.PriorityClass = ProcessPriorityClass.High;
+                
+                // Set processor affinity to use only the first CPU core
+                // This ensures all benchmarks run on the same core for consistency
+                currentProcess.ProcessorAffinity = (IntPtr)1;
+                
+                Console.WriteLine("✓ Process configured for benchmarking:");
+                Console.WriteLine($"  - Priority: {currentProcess.PriorityClass}");
+                Console.WriteLine($"  - Processor Affinity: Core 0 only");
+                Console.WriteLine($"  - Process ID: {currentProcess.Id}");
+                Console.WriteLine();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Warning: Could not configure process settings: {ex.Message}");
+                Console.WriteLine("Benchmarks will continue but may have more variance.");
+                Console.WriteLine();
+            }
+        }
+
         public void Setup()
         {
             var random = new Random(42);
@@ -55,7 +129,6 @@ namespace Benchmarks
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        [IterationSetup]
         public void IterationSetup()
         {
             _iterationCount++;
@@ -103,7 +176,6 @@ namespace Benchmarks
             }
         }
 
-        [IterationCleanup]
         public void IterationCleanup()
         {
             // Force garbage collection between iterations to prevent memory pressure interference
@@ -112,8 +184,7 @@ namespace Benchmarks
             GC.Collect();
         }
 
-        [Benchmark]
-        public double StringList()
+        public void StringList()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -132,11 +203,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("List", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringHashSet()
+        public void StringHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -155,11 +224,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("HashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringSortedSet()
+        public void StringSortedSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -178,11 +245,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("SortedSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringDictionary()
+        public void StringDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -201,11 +266,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("Dictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringSortedDictionary()
+        public void StringSortedDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -224,11 +287,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("SortedDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringConcurrentDictionary()
+        public void StringConcurrentDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -247,11 +308,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ConcurrentDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringImmutableList()
+        public void StringImmutableList()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -270,11 +329,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ImmutableList", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringImmutableHashSet()
+        public void StringImmutableHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -293,11 +350,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ImmutableHashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double StringArray()
+        public void StringArray()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -316,7 +371,6 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
     }
 }

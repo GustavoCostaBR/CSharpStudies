@@ -6,32 +6,106 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Engines;
 
 namespace Benchmarks
 {
-    [SimpleJob(RunStrategy.Monitoring, warmupCount: GuidBenchmarks.WarmupIterations, iterationCount: GuidBenchmarks.ActualIterations)]
-    [MemoryDiagnoser]
     public class GuidBenchmarks
     {
         // Benchmark iteration constants
         public const int WarmupIterations = 5;
         public const int ActualIterations = 50;
 
-        [Params(10, 100, 1000, 10000)]
-        public int N { get; set; }
-
-        [Params(10, 100, 1000, 10000)]
-        public int LookupCount { get; set; }
+        private int N { get; set; }
+        private int LookupCount { get; set; }
 
         private Guid[] guidSourceData = null!;
         private Guid[] guidLookupItems = null!;
         private static readonly object _fileLock = new object();
         private int _iterationCount = 0;
 
-        [GlobalSetup]
+        public void RunManual()
+        {
+            // Configure process for maximum consistency
+            ConfigureProcessForBenchmarking();
+            
+            var nValues = new[] { 10, 100, 1000, 10000 };
+            var lookupValues = new[] { 10, 100, 1000, 10000 };
+
+            foreach (var n in nValues)
+            {
+                foreach (var lookupCount in lookupValues)
+                {
+                    N = n;
+                    LookupCount = lookupCount;
+                    
+                    Console.WriteLine($"\nRunning for N={N}, LookupCount={LookupCount}");
+                    
+                    Setup();
+                    
+                    _iterationCount = 0;
+                    
+                    for (int i = 0; i < WarmupIterations + ActualIterations; i++)
+                    {
+                        IterationSetup();
+                        
+                        GuidList();
+                        IterationCleanup();
+                        
+                        GuidHashSet();
+                        IterationCleanup();
+                        
+                        GuidSortedSet();
+                        IterationCleanup();
+                        
+                        GuidDictionary();
+                        IterationCleanup();
+                        
+                        GuidSortedDictionary();
+                        IterationCleanup();
+                        
+                        GuidConcurrentDictionary();
+                        IterationCleanup();
+                        
+                        GuidImmutableList();
+                        IterationCleanup();
+                        
+                        GuidImmutableHashSet();
+                        IterationCleanup();
+                        
+                        GuidArray();
+                        IterationCleanup();
+                    }
+                }
+            }
+        }
+
+        private void ConfigureProcessForBenchmarking()
+        {
+            try
+            {
+                var currentProcess = Process.GetCurrentProcess();
+                
+                // Set highest priority for consistent timing
+                currentProcess.PriorityClass = ProcessPriorityClass.High;
+                
+                // Set processor affinity to use only the first CPU core
+                // This ensures all benchmarks run on the same core for consistency
+                currentProcess.ProcessorAffinity = (IntPtr)1;
+                
+                Console.WriteLine("✓ Process configured for benchmarking:");
+                Console.WriteLine($"  - Priority: {currentProcess.PriorityClass}");
+                Console.WriteLine($"  - Processor Affinity: Core 0 only");
+                Console.WriteLine($"  - Process ID: {currentProcess.Id}");
+                Console.WriteLine();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Warning: Could not configure process settings: {ex.Message}");
+                Console.WriteLine("Benchmarks will continue but may have more variance.");
+                Console.WriteLine();
+            }
+        }
+
         public void Setup()
         {
             // Generate N unique GUIDs for the collection
@@ -58,19 +132,9 @@ namespace Benchmarks
             }
         }
 
-        [IterationSetup]
         public void IterationSetup()
         {
             _iterationCount++;
-        }
-
-        [IterationCleanup]
-        public void IterationCleanup()
-        {
-            // Force garbage collection between iterations to prevent memory pressure interference
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
         }
 
         private void LogDetailedResults(string collectionType, int n, int lookupCount, TimeSpan creationTime, TimeSpan lookupTime, TimeSpan totalTime)
@@ -115,31 +179,15 @@ namespace Benchmarks
             }
         }
 
-        [Benchmark]
-        public double GuidArray()
+        public void IterationCleanup()
         {
-            var totalSw = Stopwatch.StartNew();
-            
-            var creationSw = Stopwatch.StartNew();
-            var collection = guidSourceData.ToArray();
-            creationSw.Stop();
-            
-            var lookupSw = Stopwatch.StartNew();
-            foreach (var item in guidLookupItems)
-                _ = Array.IndexOf(collection, item) >= 0;
-            lookupSw.Stop();
-            
-            totalSw.Stop();
-            
-            // Clear reference to help GC
-            collection = null;
-            
-            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
+            // Force garbage collection between iterations to prevent memory pressure interference
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
-        [Benchmark]
-        public double GuidList()
+        public void GuidList()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -158,11 +206,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("List", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double GuidHashSet()
+        public void GuidHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -181,11 +227,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("HashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double GuidSortedSet()
+        public void GuidSortedSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -204,11 +248,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("SortedSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double GuidDictionary()
+        public void GuidDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -227,11 +269,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("Dictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double GuidSortedDictionary()
+        public void GuidSortedDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -250,11 +290,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("SortedDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double GuidConcurrentDictionary()
+        public void GuidConcurrentDictionary()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -273,11 +311,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ConcurrentDictionary", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double GuidImmutableList()
+        public void GuidImmutableList()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -296,11 +332,9 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ImmutableList", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
         }
 
-        [Benchmark]
-        public double GuidImmutableHashSet()
+        public void GuidImmutableHashSet()
         {
             var totalSw = Stopwatch.StartNew();
             
@@ -319,7 +353,27 @@ namespace Benchmarks
             collection = null;
             
             LogDetailedResults("ImmutableHashSet", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
-            return totalSw.Elapsed.TotalMicroseconds;
+        }
+
+        public void GuidArray()
+        {
+            var totalSw = Stopwatch.StartNew();
+            
+            var creationSw = Stopwatch.StartNew();
+            var collection = guidSourceData.ToArray();
+            creationSw.Stop();
+            
+            var lookupSw = Stopwatch.StartNew();
+            foreach (var item in guidLookupItems)
+                _ = Array.IndexOf(collection, item) >= 0;
+            lookupSw.Stop();
+            
+            totalSw.Stop();
+            
+            // Clear reference to help GC
+            collection = null;
+            
+            LogDetailedResults("Array", N, LookupCount, creationSw.Elapsed, lookupSw.Elapsed, totalSw.Elapsed);
         }
     }
 }

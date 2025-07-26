@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using BenchmarkDotNet.Running;
 
 namespace Benchmarks
 {
@@ -22,7 +21,7 @@ namespace Benchmarks
                 case "benchmark":
                 case "bench":
                 case "b":
-                    var dataType = args.Length > 1 ? args[1].ToLower() : "";
+                    var dataType = args.Length > 1 ? args[1].ToLower() : "int";
                     RunBenchmarks(dataType);
                     break;
                     
@@ -34,6 +33,12 @@ namespace Benchmarks
                 case "s":
                     var analyzeDataType = args.Length > 1 ? args[1].ToLower() : "int";
                     RunStatisticalAnalysis(analyzeDataType);
+                    break;
+                    
+                case "full":
+                case "f":
+                    var fullDataType = args.Length > 1 ? args[1].ToLower() : "int";
+                    RunFullBenchmarkAndAnalysis(fullDataType);
                     break;
                     
                 case "help":
@@ -56,34 +61,47 @@ namespace Benchmarks
             Console.WriteLine("Usage: dotnet run -c Release <command> [datatype]");
             Console.WriteLine();
             Console.WriteLine("Commands:");
-            Console.WriteLine("  benchmark, bench, b    - Run performance benchmarks (30 iterations each)");
+            Console.WriteLine("  benchmark, bench, b    - Run collection benchmarks (50 iterations each)");
             Console.WriteLine("  analyze, analysis, a   - Analyze existing results with statistics");
             Console.WriteLine("  summary, sum, s        - Same as analyze (alias)");
+            Console.WriteLine("  full, f               - Run benchmarks AND analysis in sequence");
             Console.WriteLine("  help, h, ?            - Show this help message");
             Console.WriteLine();
             Console.WriteLine("Data Types:");
-            Console.WriteLine("  int, integer          - Integer benchmarks");
+            Console.WriteLine("  int, integer          - Integer benchmarks (default)");
             Console.WriteLine("  string, str           - String benchmarks");
             Console.WriteLine("  guid                  - GUID benchmarks");
             Console.WriteLine("  all                   - All data types");
+            Console.WriteLine();
+            Console.WriteLine("Features:");
+            Console.WriteLine("  • Single-core execution for maximum consistency");
+            Console.WriteLine("  • High process priority to minimize interference");
+            Console.WriteLine("  • Comprehensive variance analysis");
+            Console.WriteLine("  • Outlier detection and removal");
+            Console.WriteLine("  • Statistical summaries and performance reports");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  dotnet run -c Release benchmark int       # Run integer benchmarks");
             Console.WriteLine("  dotnet run -c Release benchmark string     # Run string benchmarks");
             Console.WriteLine("  dotnet run -c Release benchmark guid       # Run GUID benchmarks");
             Console.WriteLine("  dotnet run -c Release benchmark all        # Run all benchmarks");
-            Console.WriteLine("  dotnet run -c Release analyze int          # Analyze integer results");
             Console.WriteLine("  dotnet run -c Release analyze string       # Analyze string results");
-            Console.WriteLine("  dotnet run -c Release analyze guid         # Analyze GUID results");
-            Console.WriteLine("  dotnet run -c Release summary guid         # Same as analyze guid");
-            Console.WriteLine("  dotnet run -c Release b guid               # Short form benchmark");
-            Console.WriteLine("  dotnet run -c Release s guid               # Short form summary/analyze");
+            Console.WriteLine("  dotnet run -c Release full guid            # Run GUID benchmarks + analysis");
+            Console.WriteLine("  dotnet run -c Release b                    # Short form integer benchmark");
+            Console.WriteLine("  dotnet run -c Release s guid               # Short form GUID analysis");
+            Console.WriteLine();
+            Console.WriteLine("Note: All benchmark implementations use the same high-precision pattern");
+            Console.WriteLine("      with single-core execution and statistical variance analysis.");
         }
 
         private static void RunBenchmarks(string dataType)
         {
-            Console.WriteLine("=== Running Performance Benchmarks ===");
-            Console.WriteLine("This will run collection benchmarks with detailed timing measurements.");
+            Console.WriteLine("=== Running Collection Performance Benchmarks ===");
+            Console.WriteLine("The process will be configured for maximum consistency:");
+            Console.WriteLine("• High priority execution");
+            Console.WriteLine("• Single CPU core affinity");
+            Console.WriteLine("• Multiple iterations with statistical analysis");
+            Console.WriteLine();
             Console.WriteLine("This may take several minutes to complete...");
             Console.WriteLine();
 
@@ -95,17 +113,25 @@ namespace Benchmarks
                     Console.WriteLine("Running INTEGER benchmarks...");
                     var intBenchmarks = new IntegerBenchmarks();
                     intBenchmarks.RunManual();
+                    Console.WriteLine("✓ Integer benchmarks completed!");
+                    Console.WriteLine("Results saved to: BenchmarkDotNet.Artifacts/detailed_results_integer.txt");
                     break;
                     
                 case "string":
                 case "str":
                     Console.WriteLine("Running STRING benchmarks...");
-                    BenchmarkRunner.Run<StringBenchmarks>();
+                    var stringBenchmarks = new StringBenchmarks();
+                    stringBenchmarks.RunManual();
+                    Console.WriteLine("✓ String benchmarks completed!");
+                    Console.WriteLine("Results saved to: BenchmarkDotNet.Artifacts/detailed_results_string.txt");
                     break;
 
                 case "guid":
                     Console.WriteLine("Running GUID benchmarks...");
-                    BenchmarkRunner.Run<GuidBenchmarks>();
+                    var guidBenchmarks = new GuidBenchmarks();
+                    guidBenchmarks.RunManual();
+                    Console.WriteLine("✓ GUID benchmarks completed!");
+                    Console.WriteLine("Results saved to: BenchmarkDotNet.Artifacts/detailed_results_guid.txt");
                     break;
                     
                 case "all":
@@ -113,18 +139,31 @@ namespace Benchmarks
                     Console.WriteLine("\n1/3 Running INTEGER benchmarks...");
                     var allIntBenchmarks = new IntegerBenchmarks();
                     allIntBenchmarks.RunManual();
+                    Console.WriteLine("✓ Integer benchmarks completed!");
+                    
                     Console.WriteLine("\n2/3 Running STRING benchmarks...");
-                    BenchmarkRunner.Run<StringBenchmarks>();
+                    var allStringBenchmarks = new StringBenchmarks();
+                    allStringBenchmarks.RunManual();
+                    Console.WriteLine("✓ String benchmarks completed!");
+                    
                     Console.WriteLine("\n3/3 Running GUID benchmarks...");
-                    BenchmarkRunner.Run<GuidBenchmarks>();
+                    var allGuidBenchmarks = new GuidBenchmarks();
+                    allGuidBenchmarks.RunManual();
+                    Console.WriteLine("✓ GUID benchmarks completed!");
+                    
+                    Console.WriteLine("\n✓ All benchmarks completed successfully!");
+                    Console.WriteLine("Results saved to BenchmarkDotNet.Artifacts/ directory");
                     break;
                     
                 default:
                     Console.WriteLine($"Unknown data type: {dataType}");
                     Console.WriteLine("Available types: int, string, guid, all");
                     ShowHelp();
-                    break;
+                    return;
             }
+            
+            Console.WriteLine();
+            Console.WriteLine($"Run 'dotnet run -c Release analyze {dataType}' to generate statistical analysis.");
         }
 
         private static void RunStatisticalAnalysis(string dataType)
@@ -134,7 +173,7 @@ namespace Benchmarks
             var analyzer = new BenchmarkResultAnalyzer();
             
             // Determine file paths based on data type
-            string resultsFileName, summaryFileName, reportFileName;
+            string resultsFileName, summaryFileName, reportFileName, dataTypeName;
             switch (dataType)
             {
                 case "string":
@@ -142,14 +181,14 @@ namespace Benchmarks
                     resultsFileName = "detailed_results_string.txt";
                     summaryFileName = "statistical_summary_string.csv";
                     reportFileName = "performance_report_string.md";
-                    Console.WriteLine("Analyzing STRING benchmark results...");
+                    dataTypeName = "STRING";
                     break;
 
                 case "guid":
                     resultsFileName = "detailed_results_guid.txt";
                     summaryFileName = "statistical_summary_guid.csv";
                     reportFileName = "performance_report_guid.md";
-                    Console.WriteLine("Analyzing GUID benchmark results...");
+                    dataTypeName = "GUID";
                     break;
                     
                 case "int":
@@ -158,7 +197,7 @@ namespace Benchmarks
                     resultsFileName = "detailed_results_integer.txt";
                     summaryFileName = "statistical_summary_integer.csv";
                     reportFileName = "performance_report_integer.md";
-                    Console.WriteLine("Analyzing INTEGER benchmark results...");
+                    dataTypeName = "INTEGER";
                     break;
             }
             
@@ -166,6 +205,7 @@ namespace Benchmarks
             var summaryPath = Path.Combine(Environment.CurrentDirectory, "BenchmarkDotNet.Artifacts", summaryFileName);
             var reportPath = Path.Combine(Environment.CurrentDirectory, "BenchmarkDotNet.Artifacts", reportFileName);
             
+            Console.WriteLine($"Analyzing {dataTypeName} benchmark results...");
             Console.WriteLine($"Reading results from: {resultsPath}");
             
             // Read the benchmark results
@@ -214,6 +254,23 @@ namespace Benchmarks
             Console.WriteLine($"\nFiles generated:");
             Console.WriteLine($"- Statistical Summary: {summaryPath}");
             Console.WriteLine($"- Performance Report: {reportPath}");
+        }
+        
+        private static void RunFullBenchmarkAndAnalysis(string dataType)
+        {
+            Console.WriteLine("=== Full Benchmark Execution: Benchmarks + Analysis ===");
+            Console.WriteLine();
+            
+            // Run benchmarks first
+            Console.WriteLine("Step 1/2: Running benchmarks...");
+            RunBenchmarks(dataType);
+            
+            Console.WriteLine();
+            Console.WriteLine("Step 2/2: Analyzing results...");
+            RunStatisticalAnalysis(dataType);
+            
+            Console.WriteLine();
+            Console.WriteLine("✓ Full benchmark and analysis completed!");
         }
     }
 }

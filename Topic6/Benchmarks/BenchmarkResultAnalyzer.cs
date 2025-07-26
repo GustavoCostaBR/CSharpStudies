@@ -12,6 +12,7 @@ namespace Benchmarks
             public string CollectionType { get; set; } = string.Empty;
             public int N { get; set; }
             public int LookupCount { get; set; }
+            public string Priority { get; set; } = string.Empty;
             public double CreationTime { get; set; }
             public double LookupTime { get; set; }
             public double TotalTime { get; set; }
@@ -23,6 +24,7 @@ namespace Benchmarks
             public string CollectionType { get; set; } = string.Empty;
             public int N { get; set; }
             public int LookupCount { get; set; }
+            public string Priority { get; set; } = string.Empty;
             public int SampleCount { get; set; }
             public int OutliersRemoved { get; set; }
             
@@ -65,7 +67,7 @@ namespace Benchmarks
                 // Get the project directory (4 levels up from bin/Release/net9.0)
                 var projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName 
                                      ?? AppDomain.CurrentDomain.BaseDirectory;
-                filePath = Path.Combine(projectDirectory, "result", "detailed_results_integer.txt");
+                filePath = Path.Combine(projectDirectory, "result", "detailed_results_integer_normal.txt");
             }
             
             if (!File.Exists(filePath))
@@ -90,22 +92,23 @@ namespace Benchmarks
                 try
                 {
                     var parts = line.Split(',');
-                    if (parts.Length >= 6)
+                    if (parts.Length >= 7)
                     {
                         var result = new BenchmarkResult
                         {
                             CollectionType = parts[0].Trim(),
                             N = int.Parse(parts[1]),
                             LookupCount = int.Parse(parts[2]),
-                            CreationTime = double.Parse(parts[3]),
-                            LookupTime = double.Parse(parts[4]),
-                            TotalTime = double.Parse(parts[5])
+                            Priority = parts[3].Trim(),
+                            CreationTime = double.Parse(parts[4]),
+                            LookupTime = double.Parse(parts[5]),
+                            TotalTime = double.Parse(parts[6])
                         };
 
                         // Handle OverheadTime if available (new format)
-                        if (parts.Length >= 7)
+                        if (parts.Length >= 8)
                         {
-                            result.OverheadTime = double.Parse(parts[6]);
+                            result.OverheadTime = double.Parse(parts[7]);
                         }
                         else
                         {
@@ -130,9 +133,9 @@ namespace Benchmarks
         {
             var summaries = new List<StatisticalSummary>();
 
-            // Group by CollectionType, N, and LookupCount
+            // Group by CollectionType, N, LookupCount, and Priority
             var groups = results
-                .GroupBy(r => new { r.CollectionType, r.N, r.LookupCount })
+                .GroupBy(r => new { r.CollectionType, r.N, r.LookupCount, r.Priority })
                 .Where(g => g.Count() > 1); // Only analyze groups with multiple samples
 
             foreach (var group in groups)
@@ -149,6 +152,7 @@ namespace Benchmarks
                     CollectionType = group.Key.CollectionType,
                     N = group.Key.N,
                     LookupCount = group.Key.LookupCount,
+                    Priority = group.Key.Priority,
                     SampleCount = samples.Count,
                     OutliersRemoved = samples.Count - cleanedSamples.Count
                 };
@@ -245,7 +249,7 @@ namespace Benchmarks
             using var writer = new StreamWriter(outputPath);
             
             // Write header
-            writer.WriteLine("CollectionType,N,LookupCount,SampleCount,OutliersRemoved," +
+            writer.WriteLine("CollectionType,N,LookupCount,Priority,SampleCount,OutliersRemoved," +
                            "CreationMean,CreationStdDev,CreationMin,CreationMax,CreationMedian," +
                            "LookupMean,LookupStdDev,LookupMin,LookupMax,LookupMedian," +
                            "TotalMean,TotalStdDev,TotalMin,TotalMax,TotalMedian," +
@@ -254,9 +258,10 @@ namespace Benchmarks
             // Write data
             foreach (var summary in summaries.OrderBy(s => s.CollectionType)
                                              .ThenBy(s => s.N)
-                                             .ThenBy(s => s.LookupCount))
+                                             .ThenBy(s => s.LookupCount)
+                                             .ThenBy(s => s.Priority))
             {
-                writer.WriteLine($"{summary.CollectionType},{summary.N},{summary.LookupCount}," +
+                writer.WriteLine($"{summary.CollectionType},{summary.N},{summary.LookupCount},{summary.Priority}," +
                                $"{summary.SampleCount},{summary.OutliersRemoved}," +
                                $"{summary.CreationMean:F3},{summary.CreationStdDev:F3},{summary.CreationMin:F3},{summary.CreationMax:F3},{summary.CreationMedian:F3}," +
                                $"{summary.LookupMean:F3},{summary.LookupStdDev:F3},{summary.LookupMin:F3},{summary.LookupMax:F3},{summary.LookupMedian:F3}," +

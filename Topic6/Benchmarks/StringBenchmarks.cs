@@ -17,16 +17,19 @@ namespace Benchmarks
 
         private int N { get; set; }
         private int LookupCount { get; set; }
+        private string Priority { get; set; } = "normal";
 
         private string[] stringSourceData = null!;
         private string[] stringLookupItems = null!;
         private static readonly object _fileLock = new object();
         private int _iterationCount = 0;
 
-        public void RunManual()
+        public void RunManual(string priority = "normal")
         {
+            Priority = priority.ToLower();
+            
             // Configure process for maximum consistency
-            ConfigureProcessForBenchmarking();
+            ConfigureProcessForBenchmarking(Priority);
             
             var nValues = new[] { 10, 100, 1000, 10000 };
             var lookupValues = new[] { 10, 100, 1000, 10000 };
@@ -79,17 +82,22 @@ namespace Benchmarks
             }
         }
 
-        private void ConfigureProcessForBenchmarking()
+        private void ConfigureProcessForBenchmarking(string priority)
         {
             try
             {
                 var currentProcess = Process.GetCurrentProcess();
                 
-                // Set real-time priority for maximum consistency
-                currentProcess.PriorityClass = ProcessPriorityClass.RealTime;
+                // Set priority based on parameter
+                currentProcess.PriorityClass = priority.ToLower() switch
+                {
+                    "high" => ProcessPriorityClass.High,
+                    "realtime" => ProcessPriorityClass.RealTime,
+                    "normal" or _ => ProcessPriorityClass.Normal
+                };
                 
                 Console.WriteLine("✓ Process configured for benchmarking:");
-                Console.WriteLine($"  - Priority: {currentProcess.PriorityClass}");
+                Console.WriteLine($"  - Priority: {currentProcess.PriorityClass} ({priority})");
                 Console.WriteLine($"  - Process ID: {currentProcess.Id}");
                 Console.WriteLine($"  - Processor affinity: All cores (natural scheduling)");
                 Console.WriteLine();
@@ -144,7 +152,7 @@ namespace Benchmarks
             // Get the project directory (4 levels up from bin/Release/net9.0)
             var projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName 
                                  ?? AppDomain.CurrentDomain.BaseDirectory;
-            var logPath = Path.Combine(projectDirectory, "result", "detailed_results_string.txt");
+            var logPath = Path.Combine(projectDirectory, "result", $"detailed_results_string_{Priority}.txt");
             
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
@@ -160,9 +168,9 @@ namespace Benchmarks
                     if (needsHeader)
                     {
                         // Write header if file doesn't exist or is empty
-                        writer.WriteLine("CollectionType,N,LookupCount,CreationTime_μs,LookupTime_μs,TotalTime_μs,OverheadTime_μs");
+                        writer.WriteLine("CollectionType,N,LookupCount,Priority,CreationTime_μs,LookupTime_μs,TotalTime_μs,OverheadTime_μs");
                     }
-                    writer.WriteLine($"{collectionType},{n},{lookupCount},{creationTime.TotalMicroseconds:F2},{lookupTime.TotalMicroseconds:F2},{totalTime.TotalMicroseconds:F2},{overheadTime.TotalMicroseconds:F2}");
+                    writer.WriteLine($"{collectionType},{n},{lookupCount},{Priority},{creationTime.TotalMicroseconds:F2},{lookupTime.TotalMicroseconds:F2},{totalTime.TotalMicroseconds:F2},{overheadTime.TotalMicroseconds:F2}");
                     
                     // Force write to disk
                     writer.Flush();
@@ -170,7 +178,7 @@ namespace Benchmarks
                 catch (Exception ex)
                 {
                     // If there's an issue, write to a backup location we can debug
-                    var backupPath = Path.Combine(Path.GetTempPath(), "benchmark_debug_string.txt");
+                    var backupPath = Path.Combine(Path.GetTempPath(), $"benchmark_debug_string_{Priority}.txt");
                     Directory.CreateDirectory(Path.GetDirectoryName(backupPath));
                     File.AppendAllText(backupPath, $"ERROR: {ex.Message}\n");
                 }

@@ -59,10 +59,13 @@ namespace Benchmarks
         {
             var results = new List<BenchmarkResult>();
             
-            // If no path is provided, use the result folder path
+            // If no path is provided, use the result folder path in the project directory
             if (string.IsNullOrEmpty(filePath))
             {
-                filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "result", "detailed_results_integer.txt");
+                // Get the project directory (4 levels up from bin/Release/net9.0)
+                var projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName 
+                                     ?? AppDomain.CurrentDomain.BaseDirectory;
+                filePath = Path.Combine(projectDirectory, "result", "detailed_results_integer.txt");
             }
             
             if (!File.Exists(filePath))

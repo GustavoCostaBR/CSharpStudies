@@ -201,8 +201,10 @@ namespace Benchmarks
                     break;
             }
             
-            // Use the result folder instead of BenchmarkDotNet.Artifacts
-            var baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "result");
+            // Get the project directory (4 levels up from bin/Release/net9.0)
+            var projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName 
+                                 ?? AppDomain.CurrentDomain.BaseDirectory;
+            var baseDirectory = Path.Combine(projectDirectory, "result");
             var resultsPath = Path.Combine(baseDirectory, resultsFileName);
             var summaryPath = Path.Combine(baseDirectory, summaryFileName);
             var reportPath = Path.Combine(baseDirectory, reportFileName);

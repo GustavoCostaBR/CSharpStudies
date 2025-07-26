@@ -141,8 +141,10 @@ namespace Benchmarks
             // Calculate processor overhead (time spent on other activities)
             var overheadTime = totalTime - (creationTime + lookupTime);
 
-            // Use the result folder inside the Benchmarks directory
-            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "result", "detailed_results_string.txt");
+            // Get the project directory (4 levels up from bin/Release/net9.0)
+            var projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName 
+                                 ?? AppDomain.CurrentDomain.BaseDirectory;
+            var logPath = Path.Combine(projectDirectory, "result", "detailed_results_string.txt");
             
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));

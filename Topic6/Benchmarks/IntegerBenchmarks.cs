@@ -125,8 +125,8 @@ namespace Benchmarks
             // Calculate processor overhead (time spent on other activities)
             var overheadTime = totalTime - (creationTime + lookupTime);
 
-            // Use a hardcoded absolute path to ensure we can find it
-            var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results_integer.txt";
+            // Use the result folder inside the Benchmarks directory
+            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "result", "detailed_results_integer.txt");
             
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
@@ -152,7 +152,7 @@ namespace Benchmarks
                 catch (Exception ex)
                 {
                     // If there's an issue, write to a backup location we can debug
-                    var backupPath = @"C:\temp\benchmark_debug_integer.txt";
+                    var backupPath = Path.Combine(Path.GetTempPath(), "benchmark_debug_integer.txt");
                     Directory.CreateDirectory(Path.GetDirectoryName(backupPath));
                     File.AppendAllText(backupPath, $"ERROR: {ex.Message}\n");
                 }

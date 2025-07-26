@@ -98,8 +98,8 @@ namespace Benchmarks
         {
             Console.WriteLine("=== Running Collection Performance Benchmarks ===");
             Console.WriteLine("The process will be configured for maximum consistency:");
-            Console.WriteLine("• High priority execution");
-            Console.WriteLine("• Single CPU core affinity");
+            Console.WriteLine("• Real-time priority execution");
+            Console.WriteLine("• Natural multi-core scheduling");
             Console.WriteLine("• Multiple iterations with statistical analysis");
             Console.WriteLine();
             Console.WriteLine("This may take several minutes to complete...");
@@ -114,7 +114,7 @@ namespace Benchmarks
                     var intBenchmarks = new IntegerBenchmarks();
                     intBenchmarks.RunManual();
                     Console.WriteLine("✓ Integer benchmarks completed!");
-                    Console.WriteLine("Results saved to: BenchmarkDotNet.Artifacts/detailed_results_integer.txt");
+                    Console.WriteLine("Results saved to: result/detailed_results_integer.txt");
                     break;
                     
                 case "string":
@@ -123,7 +123,7 @@ namespace Benchmarks
                     var stringBenchmarks = new StringBenchmarks();
                     stringBenchmarks.RunManual();
                     Console.WriteLine("✓ String benchmarks completed!");
-                    Console.WriteLine("Results saved to: BenchmarkDotNet.Artifacts/detailed_results_string.txt");
+                    Console.WriteLine("Results saved to: result/detailed_results_string.txt");
                     break;
 
                 case "guid":
@@ -131,7 +131,7 @@ namespace Benchmarks
                     var guidBenchmarks = new GuidBenchmarks();
                     guidBenchmarks.RunManual();
                     Console.WriteLine("✓ GUID benchmarks completed!");
-                    Console.WriteLine("Results saved to: BenchmarkDotNet.Artifacts/detailed_results_guid.txt");
+                    Console.WriteLine("Results saved to: result/detailed_results_guid.txt");
                     break;
                     
                 case "all":
@@ -152,7 +152,7 @@ namespace Benchmarks
                     Console.WriteLine("✓ GUID benchmarks completed!");
                     
                     Console.WriteLine("\n✓ All benchmarks completed successfully!");
-                    Console.WriteLine("Results saved to BenchmarkDotNet.Artifacts/ directory");
+                    Console.WriteLine("Results saved to result/ directory");
                     break;
                     
                 default:
@@ -201,9 +201,11 @@ namespace Benchmarks
                     break;
             }
             
-            var resultsPath = Path.Combine(Environment.CurrentDirectory, "BenchmarkDotNet.Artifacts", resultsFileName);
-            var summaryPath = Path.Combine(Environment.CurrentDirectory, "BenchmarkDotNet.Artifacts", summaryFileName);
-            var reportPath = Path.Combine(Environment.CurrentDirectory, "BenchmarkDotNet.Artifacts", reportFileName);
+            // Use the result folder instead of BenchmarkDotNet.Artifacts
+            var baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "result");
+            var resultsPath = Path.Combine(baseDirectory, resultsFileName);
+            var summaryPath = Path.Combine(baseDirectory, summaryFileName);
+            var reportPath = Path.Combine(baseDirectory, reportFileName);
             
             Console.WriteLine($"Analyzing {dataTypeName} benchmark results...");
             Console.WriteLine($"Reading results from: {resultsPath}");

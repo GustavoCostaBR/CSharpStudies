@@ -59,6 +59,12 @@ namespace Benchmarks
         {
             var results = new List<BenchmarkResult>();
             
+            // If no path is provided, use the result folder path
+            if (string.IsNullOrEmpty(filePath))
+            {
+                filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "result", "detailed_results_integer.txt");
+            }
+            
             if (!File.Exists(filePath))
             {
                 Console.WriteLine($"File not found: {filePath}");

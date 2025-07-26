@@ -12,10 +12,14 @@ using BenchmarkDotNet.Engines;
 
 namespace Benchmarks
 {
-    [SimpleJob(RunStrategy.Monitoring, warmupCount: 3, iterationCount: 30)]
+    [SimpleJob(RunStrategy.Monitoring, warmupCount: GuidBenchmarks.WarmupIterations, iterationCount: GuidBenchmarks.ActualIterations)]
     [MemoryDiagnoser]
     public class GuidBenchmarks
     {
+        // Benchmark iteration constants
+        public const int WarmupIterations = 5;
+        public const int ActualIterations = 50;
+
         [Params(10, 100, 1000, 10000)]
         public int N { get; set; }
 
@@ -25,6 +29,7 @@ namespace Benchmarks
         private Guid[] guidSourceData = null!;
         private Guid[] guidLookupItems = null!;
         private static readonly object _fileLock = new object();
+        private int _iterationCount = 0;
 
         [GlobalSetup]
         public void Setup()
@@ -53,6 +58,12 @@ namespace Benchmarks
             }
         }
 
+        [IterationSetup]
+        public void IterationSetup()
+        {
+            _iterationCount++;
+        }
+
         [IterationCleanup]
         public void IterationCleanup()
         {
@@ -64,6 +75,12 @@ namespace Benchmarks
 
         private void LogDetailedResults(string collectionType, int n, int lookupCount, TimeSpan creationTime, TimeSpan lookupTime, TimeSpan totalTime)
         {
+            // Only log results after warmup iterations are complete
+            if (_iterationCount <= WarmupIterations)
+            {
+                return; // Skip logging during warmup
+            }
+
             // Use a hardcoded absolute path to ensure we can find it
             var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results_guid.txt";
             

@@ -12,10 +12,14 @@ using BenchmarkDotNet.Engines;
 
 namespace Benchmarks
 {
-    [SimpleJob(RunStrategy.Monitoring, warmupCount: 5, iterationCount: 50)]
+    [SimpleJob(RunStrategy.Monitoring, warmupCount: IntegerBenchmarks.WarmupIterations, iterationCount: IntegerBenchmarks.ActualIterations)]
     [MemoryDiagnoser]
     public class IntegerBenchmarks
     {
+        // Benchmark iteration constants
+        public const int WarmupIterations = 5;
+        public const int ActualIterations = 50;
+
         [Params(10, 100, 1000, 10000)]
         public int N { get; set; }
 
@@ -25,6 +29,7 @@ namespace Benchmarks
         private int[] intSourceData = null!;
         private int[] intLookupItems = null!;
         private static readonly object _fileLock = new object();
+        private int _iterationCount = 0;
 
         [GlobalSetup]
         public void Setup()
@@ -34,8 +39,20 @@ namespace Benchmarks
             intLookupItems = Enumerable.Range(1, LookupCount).Select(i => random.Next()).ToArray();
         }
 
+        [IterationSetup]
+        public void IterationSetup()
+        {
+            _iterationCount++;
+        }
+
         private void LogDetailedResults(string collectionType, int n, int lookupCount, TimeSpan creationTime, TimeSpan lookupTime, TimeSpan totalTime)
         {
+            // Only log results after warmup iterations are complete
+            if (_iterationCount <= WarmupIterations)
+            {
+                return; // Skip logging during warmup
+            }
+
             // Use a hardcoded absolute path to ensure we can find it
             var logPath = @"C:\Users\Gustavo\Documents\Projetos\Estudos_Csharp\CSharpStudies\Topic6\Benchmarks\BenchmarkDotNet.Artifacts\detailed_results_integer.txt";
             

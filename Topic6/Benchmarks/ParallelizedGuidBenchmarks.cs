@@ -14,7 +14,6 @@ namespace Benchmarks
 {
     [SimpleJob(RunStrategy.Monitoring, warmupCount: 5, iterationCount: 50)]
     [MemoryDiagnoser]
-    [HardwareCounters(HardwareCounter.BranchMispredictions, HardwareCounter.CacheMisses)]
     public class ParallelizedGuidBenchmarks
     {
         [Params(10, 100, 1000, 10000)]

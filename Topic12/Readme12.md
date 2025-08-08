@@ -193,44 +193,157 @@ While powerful, boxing and unboxing have a performance cost due to heap allocati
 
 ## Interface Implementation
 
-An **interface** is a contract that defines a set of public methods, properties, events, or indexers. A class or struct that implements an interface *must* provide an implementation for all its members.
+An **interface** is a contract that defines a set of related functionalities that a non-abstract `class` or `struct` *must* implement. It's a powerful tool for achieving abstraction and polymorphism across unrelated types.
 
-Interfaces are a powerful tool for achieving polymorphism across unrelated classes. They define a "can-do" relationship (e.g., a `Car` *can be* `IDisposable`).
+-   An interface is a blueprint for a "can-do" relationship (e.g., a `Car` *can be* `IDisposable`, a `Customer` *can be* `ILoggable`).
+-   A class can inherit from only one base class, but it can implement **multiple interfaces**.
+-   Interfaces themselves cannot be instantiated.
+
+### What Can an Interface Contain?
+
+An interface can define the signatures for:
+-   **Methods**: `void MyMethod();`
+-   **Properties**: `int MyProperty { get; set; }`
+-   **Events**: `event EventHandler MyEvent;`
+-   **Indexers**: `T this[int index] { get; }`
+
+### Example: Properties and Multiple Interfaces
+
+Let's model a system where items can be sold and shipped. These are separate concerns, so we can define them in separate interfaces.
 
 ```csharp
-// The interface defines a capability.
+// Defines what is required for an item to be sold
+public interface ISellable
+{
+    decimal Price { get; } // A read-only property
+    string Sku { get; }     // Stock Keeping Unit
+
+    void AddToCart();
+}
+
+// Defines what is required for an item to be shipped
+public interface IShippable
+{
+    double WeightKg { get; }
+    double VolumeCm3 { get; }
+}
+
+// This class implements BOTH interfaces
+public class PhysicalProduct : ISellable, IShippable
+{
+    public string Name { get; set; }
+    public decimal Price { get; private set; }
+    public string Sku { get; private set; }
+    public double WeightKg { get; private set; }
+    public double VolumeCm3 { get; private set; }
+
+    public PhysicalProduct(string name, decimal price, string sku, double weight, double volume)
+    {
+        Name = name; Price = price; Sku = sku; WeightKg = weight; VolumeCm3 = volume;
+    }
+
+    public void AddToCart()
+    {
+        Console.WriteLine($"Adding {Name} to cart at ${Price}.");
+    }
+}
+
+// This class only implements one interface
+public class DigitalSubscription : ISellable
+{
+    public string ServiceName { get; set; }
+    public decimal Price { get; private set; }
+    public string Sku { get; private set; }
+
+    public DigitalSubscription(string name, decimal price, string sku)
+    {
+        ServiceName = name; Price = price; Sku = sku;
+    }
+
+    public void AddToCart()
+    {
+        Console.WriteLine($"Adding subscription to {ServiceName} to cart.");
+    }
+}
+```
+
+This design allows us to write methods that work with any `IShippable` or any `ISellable` object, decoupling the logic from the concrete types.
+
+```csharp
+public void ProcessShoppingCart(List<ISellable> items)
+{
+    foreach (var item in items)
+    {
+        item.AddToCart(); // We only care that the item is sellable.
+    }
+}
+```
+
+### Advanced Feature: Default Interface Methods (C# 8.0+)
+
+Since C# 8.0, interfaces can provide a default implementation for a member. This is useful for adding new members to an existing public interface without breaking all the classes that already implement it.
+
+```csharp
 public interface ILoggable
 {
     string GetLogMessage();
+
+    // Default implementation. Existing classes don't have to implement this.
+    void LogToConsole()
+    {
+        Console.WriteLine(GetLogMessage());
+    }
 }
 
-// A class implementing the interface.
 public class Customer : ILoggable
 {
     public string Name { get; set; }
     public string GetLogMessage() => $"Customer: {Name}";
 }
 
-// A completely unrelated class also implementing the interface.
-public class SystemEvent : ILoggable
-{
-    public int EventId { get; set; }
-    public string GetLogMessage() => $"Event ID: {EventId} occurred.";
-}
-
-// --- Polymorphism via Interfaces ---
-var loggables = new List<ILoggable>
-{
-    new Customer { Name = "ACME Corp" },
-    new SystemEvent { EventId = 500 }
-};
-
-foreach (var item in loggables)
-{
-    // We don't care about the concrete type, only that it "can be" logged.
-    Console.WriteLine(item.GetLogMessage());
-}
+// Usage
+var customer = new Customer { Name = "ACME Corp" };
+customer.LogToConsole(); // We can call the default method.
 ```
+
+### Advanced Feature: Explicit Interface Implementation
+
+Sometimes a class may need to implement two interfaces that have a member with the same name, or you may want to hide an interface's method from the class's public API. **Explicit implementation** solves this. The member is only accessible when the object is cast to the interface type.
+
+```csharp
+interface IEnglishSpeaker { string Greet(); }
+interface IFrenchSpeaker { string Greet(); }
+
+public class MultilingualPerson : IEnglishSpeaker, IFrenchSpeaker
+{
+    // Explicit implementation for English
+    string IEnglishSpeaker.Greet() => "Hello!";
+
+    // Explicit implementation for French
+    string IFrenchSpeaker.Greet() => "Bonjour!";
+
+    // A public method for the class itself
+    public string GreetInGerman() => "Guten Tag!";
+}
+
+// Usage
+var person = new MultilingualPerson();
+// person.Greet(); // Compile Error: No Greet method on the class itself.
+
+// To call a specific version, cast to the interface
+IEnglishSpeaker englishSpeaker = person;
+Console.WriteLine(englishSpeaker.Greet()); // Output: Hello!
+
+IFrenchSpeaker frenchSpeaker = person;
+Console.WriteLine(frenchSpeaker.Greet()); // Output: Bonjour!
+```
+
+### Why Interfaces Are So Useful
+
+1.  **Decoupling**: Interfaces allow you to separate the "what" (the contract) from the "how" (the implementation). Code that depends on an interface doesn't need to know about the concrete classes, making your system easier to change and maintain.
+2.  **Testability (Mocking)**: When writing unit tests, you can easily create "mock" or "fake" implementations of an interface. This allows you to test a piece of code in isolation without depending on external systems like a real database or web service.
+3.  **Polymorphism**: They enable polymorphism for completely unrelated classes that share a common capability.
+4.  **Multiple Inheritance of Behavior**: While C# only allows single inheritance for classes, a class can implement any number of interfaces, allowing it to "inherit" and express multiple behaviors.
 
 ## Advanced Concepts & Best Practices
 

@@ -1,5 +1,7 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
+using CSharpStudies.Topic13.Examples.EventBus; // added
 
 namespace CSharpStudies.Topic13.Examples
 {
@@ -155,6 +157,19 @@ namespace CSharpStudies.Topic13.Examples
             Console.WriteLine("The VideoEncoder is completely decoupled. It doesn't know the MailService or MessageService exist.");
             Console.WriteLine("If we want to add a Push Notification service, we just create the new class and subscribe it to the event.");
             Console.WriteLine("The VideoEncoder class does not need to change. This is flexible, maintainable, and testable.");
+
+            Console.WriteLine("\n------------------------------------------\n");
+            Console.WriteLine("Now demonstrating an in-memory event bus abstraction (publish/subscribe) and MassTransit.");
+            // Run async examples synchronously (demo only)
+            InMemoryEventBusExample.RunAsync().GetAwaiter().GetResult();
+            MassTransitExample.RunAsync().GetAwaiter().GetResult();
+
+            Console.WriteLine("\n------------------------------------------\nSummary of Approaches:\n");
+            Console.WriteLine("1) Tightly-Coupled: Direct method calls. Compile-time dependency. Synchronous. Changing subscribers requires modifying publisher.");
+            Console.WriteLine("2) .NET Events (current example): In-process, multicast delegate. Still synchronous (handlers invoked on same thread unless they offload work). Coupling reduced (publisher only exposes an event) but still limited to same process & lifetime.");
+            Console.WriteLine("3) Custom In-Memory Event Bus: Explicit abstraction (IEventHandler / IDomainEvent) enabling clearer testing, potential middleware, option to evolve to async/parallel dispatch. Still in-process and volatile.");
+            Console.WriteLine("4) MassTransit (with InMemory transport here): Fully asynchronous messaging abstraction. Producers publish messages; consumers handled via message broker API. Supports retries, concurrency control, diagnostics, easy switch to RabbitMQ/Azure Service Bus, etc.");
+            Console.WriteLine("Best usage:\n - Use tight coupling only for trivial, single-responsibility internal logic.\n - Use .NET events for simple in-process notifications where reliability, ordering, scaling across processes are not concerns.\n - Use a custom in-memory bus when you want clearer domain event semantics, testability, and an evolution path to external messaging without a heavy framework initially.\n - Use MassTransit (or similar) when you need robustness: cross-process communication, retries, durability (with real transport), scaling, observability, message versioning.");
         }
     }
 }

@@ -7,4 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- MassTransit core (includes in-memory transport) -->
+    <PackageReference Include="MassTransit" Version="8.1.0" />
+  </ItemGroup>
+
 </Project>

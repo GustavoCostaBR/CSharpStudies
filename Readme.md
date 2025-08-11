@@ -71,3 +71,52 @@ This is a basic C# project structure for learning and practicing C# programming.
 ## Topic 13: Delegates and events 
 - EventHandler delegate 
 - Event registration
+
+## Topic 14: Events and Delegates (Advanced)
+- Definition and use of delegates
+- Callback usage
+- Using events
+
+## Topic 15: Generic Programming
+- Generic data types
+- Generic types and type safety
+- Custom generic classes, methods, and other data types
+- Generic collections
+- Use of Constraints and more advanced techniques
+
+## Topic 16: Operator Overloading (Optional)
+- Introduction to overloading operators
+- Implicit and explicit overloading
+
+## Topic 17: Language Extensions
+- Implicit declaration of variables
+- Partial Classes
+- Constructor Invocation
+- Nullable Types and Operators ??, ?., ?[
+- Tuples
+- Discards, Out variables, Deconstructions
+- Extension methods
+- Optional and named parameters
+- Object Initializers
+
+## Topic 18: Delegates, Lambda Expressions, and LINQ
+- Anonymous types
+- Lambda expressions
+- Generic delegates
+- IEnumerable and IQueryable
+- Closure (optional)
+
+## Topic 19: Pattern Matching (Optional)
+- Pattern Matching Overview
+- Switch Pattern Matching
+- Is Pattern Matching
+- Switch Pattern Expression and Expression Bodies
+
+## Topic 20: Records
+- Introduction to Records
+- Mutability
+- Value Equality
+
+## Topic 21: Assemblies and Attributes
+- Assemblies and the use of attributes
+- Compiler directives and conditional compilation

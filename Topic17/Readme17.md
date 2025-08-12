@@ -237,3 +237,146 @@ public class Program
 ## Summary
 
 C#'s language extensions are a suite of features designed to make development more productive and the resulting code more readable and robust. From the conciseness of `var` and object initializers to the safety of null-conditional operators and the flexibility of extension methods and tuples, these features are essential tools in the modern C# developer's toolkit. Mastering them allows for writing elegant code that is both efficient and easy to maintain.
+
+---
+
+## Additional Language Extensions
+
+Here are the details for the other language extensions mentioned in the topic list.
+
+### Partial Classes
+
+Partial classes allow you to split the definition of a single class, struct, or interface across multiple `.cs` files. The compiler then combines all the parts into a single type during compilation.
+
+**Why use them?**
+-   **Large Classes**: Helps in managing very large classes by separating their logic into different files (e.g., fields in one file, methods in another).
+-   **Code Generation**: It's a key feature used by source generators, like the designers in Windows Forms or ASP.NET. The machine-generated code is kept in one file, and your custom logic is in another, preventing your code from being overwritten.
+
+**Syntax & Usage:**
+You just need to add the `partial` keyword to each part of the class definition.
+
+*File1: `Person_Properties.cs`*
+```csharp
+public partial class Person
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+```
+
+*File2: `Person_Methods.cs`*
+```csharp
+public partial class Person
+{
+    public void Greet()
+    {
+        Console.WriteLine($"Hello, my name is {Name}.");
+    }
+}
+```
+When compiled, `Person` will have the `Name` and `Age` properties and the `Greet` method.
+
+### Constructor Invocation (Chaining)
+
+C# allows a constructor to call another constructor in the same class or in the base class. This is known as constructor chaining and is used to reduce code duplication.
+
+-   **`this(...)`**: Calls another constructor in the *same* class.
+-   **`base(...)`**: Calls a constructor in the *base* (parent) class.
+
+**Syntax & Usage:**
+```csharp
+public class Vehicle
+{
+    public int Wheels { get; }
+
+    // Base constructor
+    public Vehicle(int wheels)
+    {
+        Wheels = wheels;
+        Console.WriteLine("Vehicle constructor called.");
+    }
+}
+
+public class Car : Vehicle
+{
+    public string Make { get; }
+
+    // This constructor calls another constructor in this same class (Car)
+    public Car(string make) : this(make, 4) 
+    {
+        Console.WriteLine("Car(make) constructor called.");
+    }
+
+    // This constructor calls the base class constructor (Vehicle)
+    public Car(string make, int wheels) : base(wheels)
+    {
+        Make = make;
+        Console.WriteLine("Car(make, wheels) constructor called.");
+    }
+}
+
+// Usage:
+// var myCar = new Car("Ford");
+// Output:
+// Vehicle constructor called.
+// Car(make, wheels) constructor called.
+// Car(make) constructor called.
+```
+### Discards, Out Variables, and Deconstruction Enhancements
+
+These features improve the way we handle `out` parameters and deconstruction.
+
+-   **Out Variables**: You can declare a variable right at the point where it is passed as an `out` argument, instead of declaring it beforehand.
+-   **Discards (`_`)**: If you don't need the value of an `out` parameter or a deconstructed variable, you can use an underscore (`_`) to ignore it.
+
+**Syntax & Usage:**
+```csharp
+// --- Out Variables ---
+// Old way:
+// int parsedNumber;
+// bool success = int.TryParse("123", out parsedNumber);
+
+// New way with out variables:
+if (int.TryParse("123", out int parsedNumber))
+{
+    Console.WriteLine($"Parsed: {parsedNumber}");
+}
+
+// --- Discards ---
+// If you only care about success, not the value:
+if (int.TryParse("456", out _))
+{
+    Console.WriteLine("Parsing was successful!");
+}
+
+// --- Discards in Deconstruction ---
+(string name, _, int year) = ("Ford", "Mustang", 1969);
+Console.WriteLine($"{name} was made in {year}."); // Ignores "Mustang"
+```
+
+### Optional and Named Parameters
+
+-   **Optional Parameters**: Allow you to define a default value for a parameter in a method signature. This makes the parameter optional for the caller.
+-   **Named Parameters**: Allow the caller to specify the value for a parameter by its name instead of its position. This improves readability, especially for methods with many optional parameters.
+
+**Syntax & Usage:**
+```csharp
+public void SendMessage(string message, string to, string from = "System", int retries = 3)
+{
+    Console.WriteLine($"Sending '{message}' from '{from}' to '{to}'. Retries: {retries}");
+}
+
+// --- Calling the method ---,
+
+// 1. Using positional arguments
+SendMessage("Hello", "User1"); 
+// Output: Sending 'Hello' from 'System' to 'User1'. Retries: 3
+
+// 2. Using named parameters to change the order and skip defaults
+SendMessage(to: "User2", message: "Hi there!");
+// Output: Sending 'Hi there!' from 'System' to 'User2'. Retries: 3
+
+// 3. Using a mix, but positional must come before named
+SendMessage("Another message", to: "User3", retries: 5);
+// Output: Sending 'Another message' from 'System' to 'User3'. Retries: 5
+```

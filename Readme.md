@@ -104,9 +104,9 @@ This is a basic C# project structure for learning and practicing C# programming.
 - Lambda expressions
 - Generic delegates
 - IEnumerable and IQueryable
-- Closure (optional)
+- Closure
 
-## Topic 19: Pattern Matching (Optional)
+## Topic 19: Pattern Matching
 - Pattern Matching Overview
 - Switch Pattern Matching
 - Is Pattern Matching
@@ -120,3 +120,27 @@ This is a basic C# project structure for learning and practicing C# programming.
 ## Topic 21: Assemblies and Attributes
 - Assemblies and the use of attributes
 - Compiler directives and conditional compilation
+
+## Topic 22: Memory and Resource Management
+- Garbage Collector
+- Implicit and Explicit release of resources
+- Interface IDisposable
+- Using a IDisposable
+- Weak references (optional)
+- Generation (optional)
+
+## Topic 23: Reading and Writing Data Using Streams
+- Introduction to streams
+- Using the FileStream class
+- BinaryReader and BinaryWriter
+- StreamReader and StreamWriter
+- Use of FileInfo, DirInfo classes
+- Using the FileSystemWatcher class
+- Using the CryptoStream class (optional)
+
+## Topic 24: Data Serialization
+- Introduction to serialization
+- Shallow and deep serialization
+- XML serialization
+- Serialization Binary
+- JSON serialization

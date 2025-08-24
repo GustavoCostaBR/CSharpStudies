@@ -10,6 +10,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utils", "Utils", "{DFFE2E93
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventUtils", "EventUtils\EventUtils.csproj", "{3A127E7F-47D0-4D49-A509-780DDFF5096C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DesignPatterns", "DesignPatterns", "{CA8F1DBA-A884-4346-B734-5B8129A4C549}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CreationalPatterns", "CreationalPatterns", "{0BD6822E-5BE0-4654-B994-D72A80D99065}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbstractFactory", "AbstractFactory\AbstractFactory.csproj", "{96D40896-42D7-47BC-BE57-EA40CE03EF08}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +30,10 @@ Global
 		{3A127E7F-47D0-4D49-A509-780DDFF5096C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A127E7F-47D0-4D49-A509-780DDFF5096C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A127E7F-47D0-4D49-A509-780DDFF5096C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96D40896-42D7-47BC-BE57-EA40CE03EF08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96D40896-42D7-47BC-BE57-EA40CE03EF08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96D40896-42D7-47BC-BE57-EA40CE03EF08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96D40896-42D7-47BC-BE57-EA40CE03EF08}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -31,6 +41,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{011536CA-F1B1-2856-1C51-1265C8376380} = {713E7F48-AEB7-A686-FC02-00494B1268F2}
 		{3A127E7F-47D0-4D49-A509-780DDFF5096C} = {DFFE2E93-60FB-4471-8979-D576096AA7DE}
+		{0BD6822E-5BE0-4654-B994-D72A80D99065} = {CA8F1DBA-A884-4346-B734-5B8129A4C549}
+		{96D40896-42D7-47BC-BE57-EA40CE03EF08} = {0BD6822E-5BE0-4654-B994-D72A80D99065}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {73C46970-514D-4BB5-9A17-181B32C25563}

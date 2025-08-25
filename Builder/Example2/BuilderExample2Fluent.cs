@@ -24,7 +24,7 @@ public sealed class VehicleFluentBuilder
 
     // Entry points (discoverable via IntelliSense)
     public static VehicleFluentBuilder For(VehicleType type) => new(type);
-    public static VehicleFluentBuilder Car() => new(VehicleType.Car);
+    public static VehicleFluentBuilder Car() => new VehicleFluentBuilder(VehicleType.Car).StandardDefaults();
     public static VehicleFluentBuilder MotorCycle() => new(VehicleType.MotorCycle);
     public static VehicleFluentBuilder Scooter() => new(VehicleType.Scooter);
 
@@ -104,7 +104,6 @@ public static class FluentVehicleExample2Demo
         WriteLine("\n===== Example2 Fluent Refactor =====");
 
         var car = VehicleFluentBuilder.Car()
-            .StandardDefaults() // fills defaults
             .WithEngine("3000 cc") // override just one aspect
             .Build();
         car.Show();

@@ -13,7 +13,7 @@ public sealed record Card
     {
         Id = Guid.Empty;
         Name = string.Empty;
-        Fields = new List<Field>();
+        Fields = [];
     }
 
     public Guid Id { get; init; }

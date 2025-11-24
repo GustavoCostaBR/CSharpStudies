@@ -14,7 +14,7 @@ public sealed record Page
     {
         Id = Guid.Empty;
         Name = string.Empty;
-        Sections = new List<Section>();
+        Sections = [];
     }
 
     public Guid Id { get; init; }

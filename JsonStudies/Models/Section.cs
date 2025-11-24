@@ -14,8 +14,8 @@ public sealed record Section
     {
         Id = Guid.Empty;
         Name = string.Empty;
-        Cards = new List<Card>();
-        Fields = new List<Field>();
+        Cards = [];
+        Fields = [];
     }
 
     public Guid Id { get; init; }

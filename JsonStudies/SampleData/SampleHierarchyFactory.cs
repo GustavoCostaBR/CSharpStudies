@@ -8,36 +8,11 @@ public static class SampleHierarchyFactory
     {
         var random = new Random(seed);
 
-        // Deterministic Guid generation helper
-        Guid NextGuid()
-        {
-            var b = new byte[16];
-            random.NextBytes(b);
-            return new Guid(b);
-        }
-
-        // Helper to create fields
-        List<Field> CreateFieldsDeterministic(int count)
-        {
-            var fields = new List<Field>(count);
-            for (int i = 0; i < count; i++)
-            {
-                fields.Add(new Field(
-                    id: NextGuid(),
-                    name: $"Field {i}",
-                    reference: $"REF-{random.Next(1000, 9999)}",
-                    description: "Generated field description",
-                    value: $"Value-{random.Next(100, 999)}"
-                ));
-            }
-            return fields;
-        }
-
         var sections = new List<Section>(sectionsPerPage);
-        for (int s = 0; s < sectionsPerPage; s++)
+        for (var s = 0; s < sectionsPerPage; s++)
         {
             var cards = new List<Card>(cardsPerSection);
-            for (int c = 0; c < cardsPerSection; c++)
+            for (var c = 0; c < cardsPerSection; c++)
             {
                 cards.Add(new Card(
                     id: NextGuid(),
@@ -59,5 +34,31 @@ public static class SampleHierarchyFactory
             name: "Generated Page",
             sections: sections
         );
+
+        // Helper to create fields
+        List<Field> CreateFieldsDeterministic(int count)
+        {
+            var fields = new List<Field>(count);
+            for (var i = 0; i < count; i++)
+            {
+                fields.Add(new Field(
+                    id: NextGuid(),
+                    name: $"Field {i}",
+                    reference: $"REF-{random.Next(1000, 9999)}",
+                    description: "Generated field description",
+                    value: $"Value-{random.Next(100, 999)}"
+                ));
+            }
+
+            return fields;
+        }
+
+        // Deterministic Guid generation helper
+        Guid NextGuid()
+        {
+            var b = new byte[16];
+            random.NextBytes(b);
+            return new Guid(b);
+        }
     }
 }

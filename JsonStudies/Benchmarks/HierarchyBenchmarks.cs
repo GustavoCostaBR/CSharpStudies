@@ -71,7 +71,7 @@ public class HierarchyBenchmarks
     public Field? LookupInMemory()
     {
         var (_, index) = _inMemoryAdapter.BuildIndexedTree(_page);
-        return _inMemoryAdapter.TryGetField(index, _existingFieldId);
+        return InMemoryHierarchyAdapter.TryGetField(index, _existingFieldId);
     }
 
     public static void Run() => BenchmarkRunner.Run<HierarchyBenchmarks>();

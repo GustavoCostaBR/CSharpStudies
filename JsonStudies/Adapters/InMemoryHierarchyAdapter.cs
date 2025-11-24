@@ -28,8 +28,8 @@ public class InMemoryHierarchyAdapter
         return (page, index);
     }
 
-    public Field? TryGetField(Dictionary<Guid, Field> index, Guid id)
+    public static Field? TryGetField(Dictionary<Guid, Field> index, Guid id)
     {
-        return index.TryGetValue(id, out var field) ? field : null;
+        return index.GetValueOrDefault(id);
     }
 }

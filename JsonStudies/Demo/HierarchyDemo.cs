@@ -16,6 +16,7 @@ public static class HierarchyDemo
         Console.WriteLine("=== Demo: System.Text.Json ===");
         var jsonPayload = jsonAdapter.Serialize(page);
         Console.WriteLine($"JSON length: {jsonPayload.Length}");
+        Console.WriteLine(jsonPayload); // Print JSON for inspection
         var rehydratedJsonPage = jsonAdapter.Deserialize(jsonPayload);
         var jsonTraversalCount = HierarchyOperations.TraverseFields(rehydratedJsonPage).Count();
         Console.WriteLine($"Fields traversed: {jsonTraversalCount}");
@@ -30,7 +31,7 @@ public static class HierarchyDemo
         Console.WriteLine("\n=== Demo: In-memory index ===");
         var (_, fieldIndex) = inMemoryAdapter.BuildIndexedTree(page);
         var targetFieldId = page.Sections.First().Cards.First().Fields.First().Id;
-        var field = inMemoryAdapter.TryGetField(fieldIndex, targetFieldId);
+        var field = InMemoryHierarchyAdapter.TryGetField(fieldIndex, targetFieldId);
         Console.WriteLine(field is null
             ? "Field not found"
             : $"Field found: {field.Name} -> {field.Value}");

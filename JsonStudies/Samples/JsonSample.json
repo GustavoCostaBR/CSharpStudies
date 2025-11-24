@@ -1,0 +1,172 @@
+{
+    "id": "82fea160-6263-dd20-5ec1-82afeece4634",
+    "name": "Generated Page",
+    "sections": [
+        {
+            "id": "87b98e7c-1880-e010-4480-ea1527eeee80",
+            "name": "Section 0",
+            "cards": [
+                {
+                    "id": "96ba173e-04ae-3bcd-9986-9e56f0adbf3a",
+                    "name": "Card 0",
+                    "fields": [
+                        {
+                            "id": "254db76f-1755-cc5d-6e8b-0914579ab036",
+                            "name": "Field 0",
+                            "reference": "REF-2677",
+                            "description": "Generated field description",
+                            "value": "Value-137"
+                        },
+                        {
+                            "id": "c7b30b28-db07-f2ae-70dc-9505096e676b",
+                            "name": "Field 1",
+                            "reference": "REF-3606",
+                            "description": "Generated field description",
+                            "value": "Value-682"
+                        },
+                        {
+                            "id": "27d8460d-edba-2227-fbb9-e4fed667871a",
+                            "name": "Field 2",
+                            "reference": "REF-1108",
+                            "description": "Generated field description",
+                            "value": "Value-817"
+                        }
+                    ]
+                },
+                {
+                    "id": "72afa886-6376-81a7-3769-819aadebb3bf",
+                    "name": "Card 1",
+                    "fields": [
+                        {
+                            "id": "00fd8929-c651-e49f-e0f5-0e71052d7eef",
+                            "name": "Field 0",
+                            "reference": "REF-1928",
+                            "description": "Generated field description",
+                            "value": "Value-506"
+                        },
+                        {
+                            "id": "9b423ee5-75cf-3880-b5be-a0600bf84a17",
+                            "name": "Field 1",
+                            "reference": "REF-4108",
+                            "description": "Generated field description",
+                            "value": "Value-935"
+                        },
+                        {
+                            "id": "c062841d-ca09-8191-5435-7b0aea92b1fa",
+                            "name": "Field 2",
+                            "reference": "REF-1378",
+                            "description": "Generated field description",
+                            "value": "Value-855"
+                        }
+                    ]
+                }
+            ],
+            "fields": [
+                {
+                    "id": "255164d2-7735-4e09-204b-bdabd40dae11",
+                    "name": "Field 0",
+                    "reference": "REF-9528",
+                    "description": "Generated field description",
+                    "value": "Value-828"
+                },
+                {
+                    "id": "9544b09a-4903-28af-8611-963f0d8c1b69",
+                    "name": "Field 1",
+                    "reference": "REF-6542",
+                    "description": "Generated field description",
+                    "value": "Value-947"
+                },
+                {
+                    "id": "053fe0a8-6b84-3467-5a65-0c36d1d82251",
+                    "name": "Field 2",
+                    "reference": "REF-8245",
+                    "description": "Generated field description",
+                    "value": "Value-891"
+                }
+            ]
+        },
+        {
+            "id": "5537aaa5-0c87-369f-88cb-39e8110ff6ab",
+            "name": "Section 1",
+            "cards": [
+                {
+                    "id": "07603c3c-0c75-f8f1-b7e0-3d31906a4d61",
+                    "name": "Card 0",
+                    "fields": [
+                        {
+                            "id": "94961268-d82b-cf2d-ef4a-1c503fbe1dbc",
+                            "name": "Field 0",
+                            "reference": "REF-4307",
+                            "description": "Generated field description",
+                            "value": "Value-507"
+                        },
+                        {
+                            "id": "a1eb832c-326a-8b14-b486-f728d5a1e870",
+                            "name": "Field 1",
+                            "reference": "REF-9273",
+                            "description": "Generated field description",
+                            "value": "Value-892"
+                        },
+                        {
+                            "id": "6413c0ba-910f-2b18-f0a0-b9f8c281fab3",
+                            "name": "Field 2",
+                            "reference": "REF-1383",
+                            "description": "Generated field description",
+                            "value": "Value-716"
+                        }
+                    ]
+                },
+                {
+                    "id": "64a7c775-9f80-a723-d7c6-757a67ce4e0e",
+                    "name": "Card 1",
+                    "fields": [
+                        {
+                            "id": "c8c97701-5a74-3f88-4173-d2bbc3762e21",
+                            "name": "Field 0",
+                            "reference": "REF-4856",
+                            "description": "Generated field description",
+                            "value": "Value-275"
+                        },
+                        {
+                            "id": "5668a8fa-733f-6740-ba52-b67539eaaab4",
+                            "name": "Field 1",
+                            "reference": "REF-5063",
+                            "description": "Generated field description",
+                            "value": "Value-989"
+                        },
+                        {
+                            "id": "1b5575ea-683e-0d22-cd67-e36197531748",
+                            "name": "Field 2",
+                            "reference": "REF-2695",
+                            "description": "Generated field description",
+                            "value": "Value-816"
+                        }
+                    ]
+                }
+            ],
+            "fields": [
+                {
+                    "id": "dfcaed36-006a-3234-a6d9-8458ba625ef1",
+                    "name": "Field 0",
+                    "reference": "REF-2159",
+                    "description": "Generated field description",
+                    "value": "Value-812"
+                },
+                {
+                    "id": "954bd40f-48ee-077b-df56-d3e456d46aeb",
+                    "name": "Field 1",
+                    "reference": "REF-8155",
+                    "description": "Generated field description",
+                    "value": "Value-859"
+                },
+                {
+                    "id": "a53bf47d-0576-aeae-8846-7b256d47d20c",
+                    "name": "Field 2",
+                    "reference": "REF-8384",
+                    "description": "Generated field description",
+                    "value": "Value-423"
+                }
+            ]
+        }
+    ]
+}

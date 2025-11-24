@@ -10,6 +10,10 @@ switch (mode)
     case ProgramModes.Benchmarks:
         HierarchyBenchmarks.Run();
         break;
+    case ProgramModes.MassiveBenchmarks:
+    case "massive-benchmarks":
+        MassiveHierarchyBenchmarks.Run();
+        break;
     default:
         HierarchyDemo.Run();
         break;

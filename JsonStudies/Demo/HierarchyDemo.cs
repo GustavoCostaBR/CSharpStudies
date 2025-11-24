@@ -1,4 +1,5 @@
 ﻿using JsonStudies.Adapters;
+using JsonStudies.Models;
 using JsonStudies.Operations;
 using JsonStudies.SampleData;
 
@@ -11,7 +12,6 @@ public static class HierarchyDemo
         var page = SampleHierarchyFactory.Create(sectionsPerPage: 2, cardsPerSection: 2, fieldsPerContainer: 3, seed: 42);
         var jsonAdapter = new JsonHierarchyAdapter();
         var yamlAdapter = new YamlHierarchyAdapter();
-        var inMemoryAdapter = new InMemoryHierarchyAdapter();
 
         Console.WriteLine("=== Demo: System.Text.Json ===");
         var jsonPayload = jsonAdapter.Serialize(page);
@@ -29,12 +29,12 @@ public static class HierarchyDemo
         Console.WriteLine($"Fields traversed: {yamlTraversalCount}");
 
         Console.WriteLine("\n=== Demo: In-memory index ===");
-        var (_, fieldIndex) = inMemoryAdapter.BuildIndexedTree(page);
+        var indexedPage = new IndexedPage(page);
         var targetFieldId = page.Sections.First().Cards.First().Fields.First().Id;
-        var field = InMemoryHierarchyAdapter.TryGetField(fieldIndex, targetFieldId);
-        Console.WriteLine(field is null
+        var found = indexedPage.Fields.TryGetValue(targetFieldId, out var field);
+        Console.WriteLine(!found
             ? "Field not found"
-            : $"Field found: {field.Name} -> {field.Value}");
+            : $"Field found: {field!.Name} -> {field.Value}");
     }
 }
 

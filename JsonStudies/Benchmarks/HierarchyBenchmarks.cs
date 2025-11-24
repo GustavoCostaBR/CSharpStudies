@@ -12,7 +12,6 @@ public class HierarchyBenchmarks
 {
     private readonly JsonHierarchyAdapter _jsonAdapter = new();
     private readonly YamlHierarchyAdapter _yamlAdapter = new();
-    private readonly InMemoryHierarchyAdapter _inMemoryAdapter = new();
 
     private Page _page = null!;
     private string _jsonPayload = string.Empty;
@@ -49,8 +48,8 @@ public class HierarchyBenchmarks
     [Benchmark]
     public int TraverseFieldsInMemory()
     {
-        var (page, _) = _inMemoryAdapter.BuildIndexedTree(_page);
-        return HierarchyOperations.TraverseFields(page).Count();
+        var indexedPage = new IndexedPage(_page);
+        return HierarchyOperations.TraverseFields(indexedPage.Root).Count();
     }
 
     [Benchmark]
@@ -70,8 +69,8 @@ public class HierarchyBenchmarks
     [Benchmark]
     public Field? LookupInMemory()
     {
-        var (_, index) = _inMemoryAdapter.BuildIndexedTree(_page);
-        return InMemoryHierarchyAdapter.TryGetField(index, _existingFieldId);
+        var indexedPage = new IndexedPage(_page);
+        return indexedPage.Fields.TryGetValue(_existingFieldId, out var field) ? field : null;
     }
 
     public static void Run() => BenchmarkRunner.Run<HierarchyBenchmarks>();

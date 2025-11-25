@@ -1,8 +1,8 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using JsonStudies.Adapters;
+using JsonStudies.Helpers;
 using JsonStudies.Models;
-using JsonStudies.Operations;
 using JsonStudies.SampleData;
 using System.Text.Json.Nodes;
 
@@ -13,9 +13,6 @@ public class MassiveHierarchyBenchmarks
 {
     private readonly JsonHierarchyAdapter _jsonAdapter = new();
     
-    // We are not using Yaml for this specific comparison
-    // private readonly YamlHierarchyAdapter _yamlAdapter = new();
-
     private Page _page = null!;
     private string _jsonPayload = string.Empty;
     
@@ -70,7 +67,7 @@ public class MassiveHierarchyBenchmarks
     public string Workflow_Poco_NoIndex()
     {
         var page = _jsonAdapter.Deserialize(_jsonPayload);
-        HierarchyOperations.MutateFieldValue(page, _targetFieldId, "UPDATED_VALUE");
+        PageHelper.MutateFieldValue(page, _targetFieldId, "UPDATED_VALUE");
         return _jsonAdapter.Serialize(page);
     }
 
@@ -79,7 +76,7 @@ public class MassiveHierarchyBenchmarks
     {
         var page = _jsonAdapter.Deserialize(_jsonPayload);
         var indexedPage = new IndexedPage(page);
-        indexedPage.UpdateField(_targetFieldId, "UPDATED_VALUE");
+        IndexedPageHelper.UpdateFieldValue(indexedPage, _targetFieldId, "UPDATED_VALUE");
         return _jsonAdapter.Serialize(indexedPage.Root);
     }
 
@@ -110,13 +107,13 @@ public class MassiveHierarchyBenchmarks
     [Benchmark(Description = "2. Modify Field: POCO (No Index)")]
     public void ModifyField_Poco_NoIndex()
     {
-        HierarchyOperations.MutateFieldValue(_cachedPoco_NoIndex, _targetFieldId, "UPDATED_VALUE");
+        PageHelper.MutateFieldValue(_cachedPoco_NoIndex, _targetFieldId, "UPDATED_VALUE");
     }
 
     [Benchmark(Description = "3. Modify Field: POCO (Indexed)")]
     public void ModifyField_Poco_Indexed()
     {
-        _cachedPoco_Indexed.UpdateField(_targetFieldId, "UPDATED_VALUE");
+        IndexedPageHelper.UpdateFieldValue(_cachedPoco_Indexed, _targetFieldId, "UPDATED_VALUE");
     }
 
     // =================================================================================================
@@ -143,13 +140,13 @@ public class MassiveHierarchyBenchmarks
     [Benchmark(Description = "2. Modify Section: POCO (No Index)")]
     public void ModifySection_Poco_NoIndex()
     {
-        HierarchyOperations.ReplaceSection(_cachedPoco_NoIndex, _targetSectionId, _newSection);
+        PageHelper.ReplaceSection(_cachedPoco_NoIndex, _targetSectionId, _newSection);
     }
 
     [Benchmark(Description = "3. Modify Section: POCO (Indexed)")]
     public void ModifySection_Poco_Indexed()
     {
-        _cachedPoco_Indexed.ReplaceSection(_targetSectionId, _newSection);
+        IndexedPageHelper.ReplaceSection(_cachedPoco_Indexed, _targetSectionId, _newSection);
     }
 
     // =================================================================================================

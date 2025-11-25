@@ -1,6 +1,6 @@
 ﻿namespace JsonStudies.Models;
 
-public sealed record Page
+public sealed class Page
 {
     public Page(Guid id, string name, List<Section> sections)
     {
@@ -9,15 +9,15 @@ public sealed record Page
         Sections = sections;
     }
 
-    // Parameterless constructor for YamlDotNet
-    public Page() 
+    // Parameterless constructor for serializers
+    public Page()
     {
         Id = Guid.Empty;
         Name = string.Empty;
         Sections = [];
     }
 
-    public Guid Id { get; init; }
-    public string Name { get; init; }
-    public List<Section> Sections { get; init; }
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public List<Section> Sections { get; set; }
 }

@@ -2,7 +2,7 @@
 
 namespace JsonStudies.Models;
 
-public sealed record Field
+public sealed class Field
 {
     [JsonConstructor]
     public Field(Guid id, string name, string reference, string description, string value)
@@ -23,9 +23,9 @@ public sealed record Field
         Value = string.Empty;
     }
 
-    public Guid Id { get; init; }
-    public string Name { get; init; }
-    public string Reference { get; init; }
-    public string Description { get; init; }
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public string Reference { get; set; }
+    public string Description { get; set; }
     public string Value { get; set; }
 }

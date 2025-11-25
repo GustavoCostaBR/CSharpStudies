@@ -1,8 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using JsonStudies.Adapters;
+using JsonStudies.Helpers;
 using JsonStudies.Models;
-using JsonStudies.Operations;
 using JsonStudies.SampleData;
 
 namespace JsonStudies.Benchmarks;
@@ -11,11 +11,9 @@ namespace JsonStudies.Benchmarks;
 public class HierarchyBenchmarks
 {
     private readonly JsonHierarchyAdapter _jsonAdapter = new();
-    private readonly YamlHierarchyAdapter _yamlAdapter = new();
 
     private Page _page = null!;
     private string _jsonPayload = string.Empty;
-    private string _yamlPayload = string.Empty;
     private Guid _existingFieldId;
 
     [Params(3)] public int Sections { get; set; }
@@ -27,7 +25,6 @@ public class HierarchyBenchmarks
     {
         _page = SampleHierarchyFactory.Create(Sections, CardsPerSection, FieldsPerContainer);
         _jsonPayload = _jsonAdapter.Serialize(_page);
-        _yamlPayload = _yamlAdapter.Serialize(_page);
         _existingFieldId = _page.Sections.First().Cards.First().Fields.First().Id;
     }
 
@@ -35,35 +32,21 @@ public class HierarchyBenchmarks
     public int TraverseFieldsJson()
     {
         var page = _jsonAdapter.Deserialize(_jsonPayload);
-        return HierarchyOperations.TraverseFields(page).Count();
-    }
-
-    [Benchmark]
-    public int TraverseFieldsYaml()
-    {
-        var page = _yamlAdapter.Deserialize(_yamlPayload);
-        return HierarchyOperations.TraverseFields(page).Count();
+        return PageHelper.TraverseFields(page).Count();
     }
 
     [Benchmark]
     public int TraverseFieldsInMemory()
     {
         var indexedPage = new IndexedPage(_page);
-        return HierarchyOperations.TraverseFields(indexedPage.Root).Count();
+        return PageHelper.TraverseFields(indexedPage.Root).Count();
     }
 
     [Benchmark]
     public Page ReplaceFieldJson()
     {
         var page = _jsonAdapter.Deserialize(_jsonPayload);
-        return HierarchyOperations.ReplaceFieldValue(page, _existingFieldId, "new-value");
-    }
-
-    [Benchmark]
-    public Page ReplaceFieldYaml()
-    {
-        var page = _yamlAdapter.Deserialize(_yamlPayload);
-        return HierarchyOperations.ReplaceFieldValue(page, _existingFieldId, "new-value");
+        return PageHelper.ReplaceFieldValue(page, _existingFieldId, "new-value");
     }
 
     [Benchmark]

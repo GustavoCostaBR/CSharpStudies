@@ -1,6 +1,6 @@
 ﻿namespace JsonStudies.Models;
 
-public sealed record Section
+public sealed class Section
 {
     public Section(Guid id, string name, List<Card> cards, List<Field> fields)
     {
@@ -18,8 +18,8 @@ public sealed record Section
         Fields = [];
     }
 
-    public Guid Id { get; init; }
-    public string Name { get; init; }
-    public List<Card> Cards { get; init; }
-    public List<Field> Fields { get; init; }
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public List<Card> Cards { get; set; }
+    public List<Field> Fields { get; set; }
 }

@@ -1,6 +1,6 @@
 ﻿namespace JsonStudies.Models;
 
-public sealed record Card
+public sealed class Card
 {
     public Card(Guid id, string name, List<Field> fields)
     {
@@ -16,7 +16,7 @@ public sealed record Card
         Fields = [];
     }
 
-    public Guid Id { get; init; }
-    public string Name { get; init; }
-    public List<Field> Fields { get; init; }
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public List<Field> Fields { get; set; }
 }

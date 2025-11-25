@@ -22,8 +22,10 @@ dotnet run -- Demo
 ## Run benchmarks
 ```powershell
 cd JsonStudies
-dotnet run -- Benchmarks
+dotnet run -c Release -- Benchmarks [hierarchy|massive|all]
 ```
+
+Omit the optional selector (or pass `hierarchy`) to run the small hierarchy suite, use `massive` for the large dataset benchmarks, or `all` to execute both.
 
 BenchmarkDotNet will emit results under `JsonStudies/BenchmarkDotNet.Artifacts`. Adjust `Sections`, `CardsPerSection`, and `FieldsPerContainer` params inside `HierarchyBenchmarks` to scale the dataset.
 
